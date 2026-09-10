@@ -61,6 +61,7 @@ alias bat="bat --theme='base16-256'"
 alias lc="leetrs"
 alias cg="cargo"
 alias agyc="agy -c"
+alias ofinder="open -a Finder ."
 
 # git aliases
 alias gs="git status"
@@ -68,7 +69,7 @@ alias gd="git diff"
 alias gds="git diff --staged"
 alias gla="git log --oneline --graph --decorate --all"
 # alias gl="git log --oneline --graph --decorate"
-alias gl="serie"
+alias gl="serie -p kitty-unicode"
 alias gll="git log --stat"
 alias gsw="git switch"
 
@@ -168,6 +169,8 @@ function tnew
         if not tmux has-session -t "$session_name" 2>/dev/null
             if test -n "$TMUX"
                 tmux new-session -d -s "$session_name" -c "$project_path"
+            else
+                tmux new-session -s "$session_name" -c "$project_path"
             end
         end
 
@@ -249,6 +252,18 @@ function sudolast
     sudo (history --max=1)
 end
 
+function bms --description "Bookmarks"
+    set bookmark_file /Users/milan/.config/bookmarks.txt
+    set -l bookmark (cat $bookmark_file | fzf --prompt="Select bookmark: ")
+    if test -n "$bookmark"
+        set -l bookmark_name (echo $bookmark | awk '{print $1}')
+        set -l bookmark_url (echo $bookmark | awk '{print $3}')
+        echo $bookmark_url | pbcopy
+        echo "Copied bookmark '$bookmark_name' URL to clipboard: $bookmark_url"
+    end
+end
+
+
 function dbm --description "Delete bookmark"
     set bookmark_file /Users/milan/.config/bookmarks.txt
     set -l bookmark (cat $bookmark_file | fzf --prompt="Select a bookmark to delete: ")
@@ -266,6 +281,7 @@ function dbm --description "Delete bookmark"
 end
 
 bind \cr _atuin_bind_up
+bind -M insert \cl forward-char
 bind -M insert \cr _atuin_bind_up
 
 bind ctrl-shift-t 'theme cycle'

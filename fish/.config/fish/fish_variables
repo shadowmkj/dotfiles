@@ -8,4 +8,4 @@ SETUVAR __fish_initialized:4300
 SETUVAR _fisher_jorgebucaran_2F_fisher_files:\x7e/\x2econfig/fish/functions/fisher\x2efish\x1e\x7e/\x2econfig/fish/completions/fisher\x2efish
 SETUVAR _fisher_plugins:jorgebucaran/fisher
 SETUVAR _fisher_upgraded_to_4_4:\x1d
-SETUVAR fish_user_paths:/Users/milan/go/bin\x1e/Users/milan/development/flutter/bin\x1e/Users/milan/\x2eluarocks/bin\x1e/Users/milan/\x2eluarocks\x1e/Users/milan/scripts\x1e/Users/milan/\x2eopencode/bin\x1e/Users/milan/\x2eantigravity\x2dide/antigravity\x2dide/bin\x1e/Users/milan/\x2eantigravity/antigravity/bin\x1e/Users/milan/Documents/Desk/Apps/vcpkg\x1e/Users/milan/custom\x2dbin
+SETUVAR fish_user_paths:/Users/milan/custom\x2dbin\x1e/Applications/Ghostty\x2eapp/Contents/MacOS\x1e/Users/milan/development/flutter/bin\x1e/Users/milan/\x2eopencode/bin\x1e/Users/milan/\x2eantigravity\x2dide/antigravity\x2dide/bin\x1e/Users/milan/\x2eluarocks/bin\x1e/Users/milan/\x2eantigravity/antigravity/bin
