@@ -1,0 +1,802 @@
+#!/usr/bin/env python3
+"""
+keybinds - Fast interactive keybindings search and quick reference using fzf.
+
+Extensible modular architecture supporting:
+  - AeroSpace window manager (aerospace.toml)
+  - skhd hotkey daemon (skhdrc)
+  - tmux terminal multiplexer (.tmux.conf)
+  - Additional sources via BaseParser plugins
+"""
+
+from __future__ import annotations
+
+import argparse
+from dataclasses import dataclass
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tomllib
+from typing import Dict, List, Optional
+
+
+# ==============================================================================
+# ANSI Color Formatting & Styling Constants
+# ==============================================================================
+
+CLR_RESET = "\033[0m"
+CLR_BOLD = "\033[1m"
+CLR_DIM = "\033[2m"
+CLR_CYAN = "\033[36m"
+CLR_MAGENTA = "\033[35m"
+CLR_YELLOW = "\033[33m"
+CLR_GREEN = "\033[32m"
+CLR_BLUE = "\033[34m"
+CLR_WHITE = "\033[37m"
+CLR_GRAY = "\033[90m"
+
+SOURCE_COLORS: Dict[str, str] = {
+    "aerospace": "\033[38;5;39m",   # Vivid Sky Blue
+    "skhd": "\033[38;5;213m",        # Vivid Pink / Magenta
+    "tmux": "\033[38;5;76m",         # Green
+    "fish": "\033[38;5;208m",        # Orange
+}
+
+
+# ==============================================================================
+# Data Model
+# ==============================================================================
+
+@dataclass
+class Keybind:
+    """Represents an individual keybinding definition."""
+    source: str          # e.g., "aerospace", "skhd", "tmux"
+    mode: str            # e.g., "main", "service", "default", "prefix", "copy-mode-vi"
+    key: str             # e.g., "alt-h", "hyper - b", "C-Space", "C-M-S-k"
+    command: str         # e.g., "focus left", "open -a Ghostty"
+    comment: str = ""    # Human description or comment
+    file_path: str = ""  # Source config file path
+    line_number: int = 0 # Line number in source config file
+
+    @property
+    def identifier(self) -> str:
+        """Deterministic unique identifier for preview and execution callbacks."""
+        return f"{self.source}::{self.mode}::{self.key}::{self.line_number}"
+
+    def to_fzf_line(self, use_ansi: bool = True) -> str:
+        """
+        Format the binding as a clean columnar line for fzf display.
+        Includes a tab-separated hidden payload at the end with the item identifier.
+        """
+        if use_ansi:
+            src_color = SOURCE_COLORS.get(self.source.lower(), CLR_CYAN)
+            tag_src = f"{src_color}[{self.source}]{CLR_RESET}".ljust(12 + len(src_color) + len(CLR_RESET))
+            tag_mode = f"{CLR_YELLOW}({self.mode}){CLR_RESET}".ljust(14 + len(CLR_YELLOW) + len(CLR_RESET))
+            tag_key = f"{CLR_BOLD}{CLR_GREEN}{self.key}{CLR_RESET}".ljust(22 + len(CLR_BOLD) + len(CLR_GREEN) + len(CLR_RESET))
+            arrow = f"{CLR_BLUE}→{CLR_RESET}"
+            cmd = f"{CLR_WHITE}{self.command}{CLR_RESET}"
+            desc = f" {CLR_GRAY}# {self.comment}{CLR_RESET}" if self.comment else ""
+            display_text = f"{tag_src} {tag_mode} {tag_key} {arrow} {cmd}{desc}"
+        else:
+            tag_src = f"[{self.source}]".ljust(12)
+            tag_mode = f"({self.mode})".ljust(14)
+            tag_key = self.key.ljust(22)
+            desc = f" # {self.comment}" if self.comment else ""
+            display_text = f"{tag_src} {tag_mode} {tag_key} → {self.command}{desc}"
+
+        # Hidden column with unique identifier for fzf preview and binds
+        return f"{display_text}\t{self.identifier}"
+
+    def to_preview(self) -> str:
+        """Generate a structured, visually polished preview card."""
+        desc = self.comment if self.comment else "(No description provided)"
+        source_title = self.source.capitalize()
+        if self.source.lower() == "aerospace":
+            source_title = "AeroSpace Window Manager"
+        elif self.source.lower() == "skhd":
+            source_title = "skhd Hotkey Daemon"
+        elif self.source.lower() == "tmux":
+            source_title = "tmux Multiplexer"
+
+        file_display = self.file_path
+        if file_display and os.environ.get("HOME"):
+            file_display = file_display.replace(os.environ["HOME"], "~")
+
+        loc_str = f"{file_display}:{self.line_number}" if self.line_number else file_display
+
+        card = [
+            f"{CLR_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{CLR_RESET}",
+            f"  {CLR_BOLD}{CLR_CYAN}🔑 Keybinding :{CLR_RESET} {CLR_BOLD}{CLR_GREEN}{self.key}{CLR_RESET}",
+            f"  {CLR_BOLD}{CLR_MAGENTA}📂 Source     :{CLR_RESET} {source_title}",
+            f"  {CLR_BOLD}{CLR_YELLOW}🏷️  Mode       :{CLR_RESET} {self.mode}",
+            f"  {CLR_BOLD}{CLR_WHITE}⚡ Action     :{CLR_RESET} {CLR_BOLD}{self.command}{CLR_RESET}",
+            f"  {CLR_BOLD}{CLR_BLUE}📝 Description:{CLR_RESET} {desc}",
+            f"  {CLR_BOLD}{CLR_GRAY}📄 Location   :{CLR_RESET} {loc_str}",
+            f"{CLR_DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{CLR_RESET}",
+            f"",
+            f"  {CLR_DIM}Interactive Controls in fzf:{CLR_RESET}",
+            f"    • {CLR_BOLD}Enter{CLR_RESET}    : Copy keybinding combo to clipboard",
+            f"    • {CLR_BOLD}Ctrl-Y{CLR_RESET}   : Copy command string to clipboard",
+            f"    • {CLR_BOLD}Ctrl-E{CLR_RESET}   : Execute action immediately",
+            f"    • {CLR_BOLD}Ctrl-S{CLR_RESET}   : Cycle source filter (all/aerospace/skhd/tmux)",
+            f"    • {CLR_BOLD}Esc / q{CLR_RESET}  : Close",
+        ]
+        return "\n".join(card)
+
+
+# ==============================================================================
+# Base Parser & Registry
+# ==============================================================================
+
+class BaseParser:
+    """Base class for keybinding configuration parsers."""
+    source_name: str = "unknown"
+
+    def __init__(self, config_path: Optional[Path] = None):
+        self.config_path = config_path or self.default_config_path()
+
+    def default_config_path(self) -> Optional[Path]:
+        """Subclasses should implement default search paths."""
+        return None
+
+    def parse(self) -> List[Keybind]:
+        """Parse configuration and return list of Keybind objects."""
+        raise NotImplementedError
+
+
+class KeybindRegistry:
+    """Central registry of keybindings aggregated across all configured sources."""
+
+    def __init__(self):
+        self._bindings: List[Keybind] = []
+        self._by_id: Dict[str, Keybind] = {}
+
+    def add(self, keybind: Keybind) -> None:
+        self._bindings.append(keybind)
+        self._by_id[keybind.identifier] = keybind
+
+    def get_all(self) -> List[Keybind]:
+        return list(self._bindings)
+
+    def get_by_source(self, source: str) -> List[Keybind]:
+        source_lower = source.lower()
+        if source_lower == "all":
+            return self.get_all()
+        return [b for b in self._bindings if b.source.lower() == source_lower]
+
+    def get_by_id(self, identifier: str) -> Optional[Keybind]:
+        return self._by_id.get(identifier)
+
+    def get_sources(self) -> List[str]:
+        seen = []
+        for b in self._bindings:
+            if b.source not in seen:
+                seen.append(b.source)
+        return seen
+
+
+# ==============================================================================
+# AeroSpace Parser
+# ==============================================================================
+
+class AerospaceParser(BaseParser):
+    """Parser for AeroSpace window manager TOML configuration."""
+    source_name = "aerospace"
+
+    def default_config_path(self) -> Optional[Path]:
+        candidates = [
+            Path.home() / ".config" / "aerospace" / "aerospace.toml",
+            Path.home() / ".dotfiles" / "aerospace" / ".config" / "aerospace" / "aerospace.toml",
+        ]
+        for p in candidates:
+            if p.is_file():
+                return p
+        return None
+
+    def parse(self) -> List[Keybind]:
+        if not self.config_path or not self.config_path.is_file():
+            return []
+
+        bindings: List[Keybind] = []
+        raw_text = self.config_path.read_text(encoding="utf-8")
+        raw_lines = raw_text.splitlines()
+
+        # Parse TOML structure
+        try:
+            data = tomllib.loads(raw_text)
+        except Exception:
+            data = {}
+
+        # Collect line numbers and inline/preceding comments from the raw file
+        meta_map: Dict[tuple[str, str], tuple[int, str]] = {}
+        current_mode = "main"
+        last_comment = ""
+
+        mode_header_pattern = re.compile(r"^\[mode\.([a-zA-Z0-9_-]+)\.binding\]")
+        binding_pattern = re.compile(r"^([a-zA-Z0-9_.-]+)\s*=\s*(.+)$")
+
+        for idx, line in enumerate(raw_lines, 1):
+            stripped = line.strip()
+            if not stripped:
+                last_comment = ""
+                continue
+
+            # Check section header
+            m_header = mode_header_pattern.match(stripped)
+            if m_header:
+                current_mode = m_header.group(1)
+                last_comment = ""
+                continue
+            elif stripped.startswith("["):
+                # Another section (e.g., [gaps], [[on-window-detected]])
+                current_mode = ""
+                last_comment = ""
+                continue
+
+            # Check comment line
+            if stripped.startswith("#"):
+                comment_text = stripped.lstrip("#").strip()
+                # Skip URL references in comments
+                if not comment_text.startswith("See:") and not comment_text.startswith("https://"):
+                    last_comment = comment_text
+                continue
+
+            # Check keybinding line
+            if current_mode:
+                m_bind = binding_pattern.match(stripped)
+                if m_bind:
+                    key_name = m_bind.group(1)
+                    val_and_comment = m_bind.group(2)
+                    inline_comment = ""
+                    if "#" in val_and_comment:
+                        parts = val_and_comment.split("#", 1)
+                        inline_comment = parts[1].strip()
+
+                    comment = inline_comment or last_comment
+                    meta_map[(current_mode, key_name)] = (idx, comment)
+                    last_comment = ""
+
+        # Extract bindings from parsed TOML data
+        modes = data.get("mode", {})
+        if isinstance(modes, dict):
+            for mode_name, mode_data in modes.items():
+                if not isinstance(mode_data, dict):
+                    continue
+                mode_bindings = mode_data.get("binding", {})
+                if not isinstance(mode_bindings, dict):
+                    continue
+
+                for key, val in mode_bindings.items():
+                    if isinstance(val, list):
+                        cmd = "; ".join(str(c) for c in val)
+                    else:
+                        cmd = str(val)
+
+                    line_no, comment = meta_map.get((mode_name, key), (0, ""))
+                    bindings.append(
+                        Keybind(
+                            source=self.source_name,
+                            mode=mode_name,
+                            key=key,
+                            command=cmd,
+                            comment=comment,
+                            file_path=str(self.config_path),
+                            line_number=line_no,
+                        )
+                    )
+
+        return bindings
+
+
+# ==============================================================================
+# Skhd Parser
+# ==============================================================================
+
+class SkhdParser(BaseParser):
+    """Parser for skhd simple hotkey daemon configuration."""
+    source_name = "skhd"
+
+    def default_config_path(self) -> Optional[Path]:
+        candidates = [
+            Path.home() / ".config" / "skhd" / "skhdrc",
+            Path.home() / ".dotfiles" / "skhd" / ".config" / "skhd" / "skhdrc",
+            Path.home() / ".skhdrc",
+        ]
+        for p in candidates:
+            if p.is_file():
+                return p
+        return None
+
+    def parse(self) -> List[Keybind]:
+        if not self.config_path or not self.config_path.is_file():
+            return []
+
+        bindings: List[Keybind] = []
+        raw_text = self.config_path.read_text(encoding="utf-8")
+        raw_lines = raw_text.splitlines()
+
+        current_mode = "default"
+        last_comment = ""
+        in_block = False
+
+        # Skhd patterns
+        mode_decl_pattern = re.compile(r"^::\s*([a-zA-Z0-9_-]+)")
+        mode_bind_pattern = re.compile(r"^([a-zA-Z0-9_-]+)\s*<\s*([^:]+)\s*:\s*(.+)$")
+        mode_switch_pattern = re.compile(r"^([a-zA-Z0-9_-]+)\s*<\s*([^;]+)\s*;\s*([a-zA-Z0-9_-]+)$")
+        direct_switch_pattern = re.compile(r"^([^;]+)\s*;\s*([a-zA-Z0-9_-]+)$")
+        direct_bind_pattern = re.compile(r"^([^:]+)\s*:\s*(.+)$")
+
+        for idx, line in enumerate(raw_lines, 1):
+            stripped = line.strip()
+            if not stripped:
+                last_comment = ""
+                continue
+
+            # Handle multi-line blocks like .device ... { ... }
+            if in_block:
+                if "}" in stripped:
+                    in_block = False
+                continue
+
+            if stripped.startswith(".") and "{" in stripped:
+                in_block = True
+                continue
+
+            if stripped.startswith("."):
+                # Ignore top-level directives like .remap, .load, etc.
+                last_comment = ""
+                continue
+
+            # Comment line
+            if stripped.startswith("#"):
+                comment_text = stripped.lstrip("#").strip()
+                if not comment_text.startswith("---"):
+                    last_comment = comment_text
+                continue
+
+            # Mode declaration (e.g., :: bm_mode)
+            m_decl = mode_decl_pattern.match(stripped)
+            if m_decl:
+                current_mode = m_decl.group(1)
+                last_comment = ""
+                continue
+
+            # Mode-specific binding (e.g., bm_mode < a : skhd -k escape; ...)
+            m_mode_bind = mode_bind_pattern.match(stripped)
+            if m_mode_bind:
+                mode_name = m_mode_bind.group(1).strip()
+                key_part = m_mode_bind.group(2).strip()
+                cmd_part = m_mode_bind.group(3).strip()
+                bindings.append(
+                    Keybind(
+                        source=self.source_name,
+                        mode=mode_name,
+                        key=key_part,
+                        command=cmd_part,
+                        comment=last_comment,
+                        file_path=str(self.config_path),
+                        line_number=idx,
+                    )
+                )
+                last_comment = ""
+                continue
+
+            # Mode switch within mode (e.g., bm_mode < escape ; default)
+            m_mode_sw = mode_switch_pattern.match(stripped)
+            if m_mode_sw:
+                mode_name = m_mode_sw.group(1).strip()
+                key_part = m_mode_sw.group(2).strip()
+                target_mode = m_mode_sw.group(3).strip()
+                bindings.append(
+                    Keybind(
+                        source=self.source_name,
+                        mode=mode_name,
+                        key=key_part,
+                        command=f"mode -> {target_mode}",
+                        comment=last_comment or f"Switch to {target_mode} mode",
+                        file_path=str(self.config_path),
+                        line_number=idx,
+                    )
+                )
+                last_comment = ""
+                continue
+
+            # Direct switch mode (e.g., hyper - h ; bm_mode)
+            m_dir_sw = direct_switch_pattern.match(stripped)
+            if m_dir_sw:
+                key_part = m_dir_sw.group(1).strip()
+                target_mode = m_dir_sw.group(2).strip()
+                bindings.append(
+                    Keybind(
+                        source=self.source_name,
+                        mode="default",
+                        key=key_part,
+                        command=f"mode -> {target_mode}",
+                        comment=last_comment or f"Enter {target_mode} mode",
+                        file_path=str(self.config_path),
+                        line_number=idx,
+                    )
+                )
+                last_comment = ""
+                continue
+
+            # Direct keybinding (e.g., hyper - b : open -na "Google Chrome")
+            m_dir_bind = direct_bind_pattern.match(stripped)
+            if m_dir_bind:
+                key_part = m_dir_bind.group(1).strip()
+                cmd_part = m_dir_bind.group(2).strip()
+                bindings.append(
+                    Keybind(
+                        source=self.source_name,
+                        mode="default",
+                        key=key_part,
+                        command=cmd_part,
+                        comment=last_comment,
+                        file_path=str(self.config_path),
+                        line_number=idx,
+                    )
+                )
+                last_comment = ""
+                continue
+
+        return bindings
+
+
+# ==============================================================================
+# Tmux Parser
+# ==============================================================================
+
+class TmuxParser(BaseParser):
+    """Parser for tmux multiplexer configuration."""
+    source_name = "tmux"
+
+    def default_config_path(self) -> Optional[Path]:
+        candidates = [
+            Path.home() / ".tmux.conf",
+            Path.home() / ".config" / "tmux" / "tmux.conf",
+            Path.home() / ".dotfiles" / "tmux" / ".tmux.conf",
+        ]
+        for p in candidates:
+            if p.is_file():
+                return p
+        return None
+
+    def parse(self) -> List[Keybind]:
+        if not self.config_path or not self.config_path.is_file():
+            return []
+
+        bindings: List[Keybind] = []
+        raw_text = self.config_path.read_text(encoding="utf-8")
+        raw_lines = raw_text.splitlines()
+
+        last_comment = ""
+        bind_regex = re.compile(r"^(?:bind-key|bind)\s+(.+)$")
+
+        for idx, line in enumerate(raw_lines, 1):
+            stripped = line.strip()
+            if not stripped:
+                last_comment = ""
+                continue
+
+            # Comment line
+            if stripped.startswith("#"):
+                c_text = stripped.lstrip("#").strip()
+                if not c_text.startswith("===") and not c_text.startswith("---"):
+                    last_comment = c_text
+                continue
+
+            m = bind_regex.match(stripped)
+            if m:
+                rest = m.group(1).strip()
+                inline_comment = ""
+                if "#" in rest:
+                    parts = rest.split("#", 1)
+                    rest = parts[0].strip()
+                    inline_comment = parts[1].strip()
+
+                tokens = rest.split()
+                mode = "prefix"
+                key = ""
+                cmd_tokens = []
+
+                i = 0
+                while i < len(tokens):
+                    tok = tokens[i]
+                    if tok == "-n":
+                        mode = "root"
+                        i += 1
+                    elif tok == "-r":
+                        # repeatable, keeps prefix
+                        i += 1
+                    elif tok == "-T":
+                        if i + 1 < len(tokens):
+                            mode = tokens[i + 1]
+                            i += 2
+                        else:
+                            i += 1
+                    else:
+                        if not key:
+                            key = tok.strip("'\"")
+                        else:
+                            cmd_tokens.append(tok)
+                        i += 1
+
+                cmd_str = " ".join(cmd_tokens)
+                comment = inline_comment or last_comment
+
+                if key and cmd_str:
+                    bindings.append(
+                        Keybind(
+                            source=self.source_name,
+                            mode=mode,
+                            key=key,
+                            command=cmd_str,
+                            comment=comment,
+                            file_path=str(self.config_path),
+                            line_number=idx,
+                        )
+                    )
+                last_comment = ""
+
+        return bindings
+
+
+# ==============================================================================
+# Helper Actions: Clipboard & Execution
+# ==============================================================================
+
+def copy_to_clipboard(text: str) -> None:
+    """Copy text to macOS pasteboard using pbcopy."""
+    try:
+        proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+        proc.communicate(text.encode("utf-8"))
+    except Exception as e:
+        print(f"Error copying to clipboard: {e}", file=sys.stderr)
+
+
+def notify_user(title: str, message: str) -> None:
+    """Send desktop notification via osascript."""
+    script = f'display notification "{message}" with title "{title}"'
+    subprocess.run(["osascript", "-e", script], capture_output=True)
+
+
+def execute_action(keybind: Keybind) -> None:
+    """Execute the command for a given keybinding."""
+    if keybind.source == "aerospace":
+        # Execute each subcommand via aerospace CLI
+        commands = [c.strip() for c in keybind.command.split(";") if c.strip()]
+        for c in commands:
+            subprocess.run(["aerospace", *c.split()], check=False)
+    elif keybind.source == "tmux":
+        # Execute via tmux CLI
+        subprocess.run(["tmux", *keybind.command.split()], check=False)
+    else:
+        # Generic shell execution
+        subprocess.run(keybind.command, shell=True, check=False)
+
+
+# ==============================================================================
+# Main Registry Loader
+# ==============================================================================
+
+def load_registry() -> KeybindRegistry:
+    """Load all configured parsers and register their keybindings."""
+    registry = KeybindRegistry()
+    parsers: List[BaseParser] = [
+        AerospaceParser(),
+        SkhdParser(),
+        TmuxParser(),
+    ]
+    for parser in parsers:
+        for kb in parser.parse():
+            registry.add(kb)
+    return registry
+
+
+# ==============================================================================
+# Interactive fzf Runner
+# ==============================================================================
+
+def run_fzf_interactive(registry: KeybindRegistry, filter_query: str = "", source_filter: Optional[str] = None) -> None:
+    """Launch fzf with rich previews, source switching, and interactive hotkeys."""
+    fzf_bin = shutil.which("fzf")
+    if not fzf_bin:
+        print("Error: fzf is not installed or not in PATH.", file=sys.stderr)
+        sys.exit(1)
+
+    self_script = Path(__file__).resolve()
+
+    # Determine items to display
+    items = registry.get_by_source(source_filter or "all")
+    if not items:
+        print(f"No keybindings found for source: {source_filter or 'all'}", file=sys.stderr)
+        return
+
+    lines = "\n".join(kb.to_fzf_line(use_ansi=True) for kb in items)
+
+    # Header instructions
+    sources_str = "/".join(["all"] + registry.get_sources())
+    header_text = (
+        f" [Enter] Copy Key  |  [Ctrl-Y] Copy Cmd  |  [Ctrl-E] Execute  |  [Ctrl-S] Cycle Sources ({sources_str})  |  [Esc] Quit"
+    )
+
+    # fzf command line
+    fzf_cmd = [
+        fzf_bin,
+        "--ansi",
+        "--delimiter=\t",
+        "--with-nth=1",
+        "--header", header_text,
+        "--preview", f"{sys.executable} {self_script} --preview-id {{2}}",
+        "--preview-window", "right:50%:wrap:border-left",
+        "--bind", f"enter:execute-silent({sys.executable} {self_script} --copy-key {{2}})+accept",
+        "--bind", f"ctrl-y:execute-silent({sys.executable} {self_script} --copy-cmd {{2}})+accept",
+        "--bind", f"ctrl-e:execute-silent({sys.executable} {self_script} --execute-id {{2}})+accept",
+        "--bind", f"ctrl-s:reload({sys.executable} {self_script} --cycle-source-feed)+change-header([Ctrl-S] Cycled source)",
+    ]
+
+    if filter_query:
+        fzf_cmd.extend(["--query", filter_query])
+
+    try:
+        proc = subprocess.Popen(fzf_cmd, stdin=subprocess.PIPE, text=True)
+        proc.communicate(input=lines)
+    except KeyboardInterrupt:
+        pass
+
+
+# ==============================================================================
+# CLI Entrypoint
+# ==============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Fast interactive keybindings finder and cheat sheet using fzf."
+    )
+    parser.add_argument(
+        "query",
+        nargs="?",
+        default="",
+        help="Initial search query or source filter (e.g., 'aerospace', 'skhd', 'workspace', 'focus')",
+    )
+    parser.add_argument(
+        "--source",
+        "-s",
+        help="Filter keybindings by source (e.g., 'aerospace', 'skhd', 'tmux', 'all')",
+    )
+    parser.add_argument(
+        "--preview-id",
+        help="Internal callback: print preview card for an identifier and exit",
+    )
+    parser.add_argument(
+        "--copy-key",
+        help="Internal callback: copy key for an identifier and exit",
+    )
+    parser.add_argument(
+        "--copy-cmd",
+        help="Internal callback: copy command for an identifier and exit",
+    )
+    parser.add_argument(
+        "--execute-id",
+        help="Internal callback: execute command for an identifier and exit",
+    )
+    parser.add_argument(
+        "--feed",
+        help="Internal callback: output formatted fzf lines for a specific source",
+    )
+    parser.add_argument(
+        "--cycle-source-feed",
+        action="store_true",
+        help="Internal callback: cycle to next source feed",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output all keybindings in JSON format",
+    )
+    parser.add_argument(
+        "--list-sources",
+        action="store_true",
+        help="List all detected sources",
+    )
+
+    args = parser.parse_args()
+    registry = load_registry()
+
+    # Check if query matches a known source name directly (e.g. `keybinds aerospace`)
+    source_filter = args.source
+    query = args.query
+    if query and query.lower() in [s.lower() for s in registry.get_sources()]:
+        source_filter = query.lower()
+        query = ""
+
+    # Internal fzf callbacks
+    if args.preview_id:
+        kb = registry.get_by_id(args.preview_id)
+        if kb:
+            print(kb.to_preview())
+        else:
+            print(f"Keybinding '{args.preview_id}' not found.")
+        return
+
+    if args.copy_key:
+        kb = registry.get_by_id(args.copy_key)
+        if kb:
+            copy_to_clipboard(kb.key)
+            notify_user("Keybinding Copied", f"Copied '{kb.key}' to clipboard")
+        return
+
+    if args.copy_cmd:
+        kb = registry.get_by_id(args.copy_cmd)
+        if kb:
+            copy_to_clipboard(kb.command)
+            notify_user("Command Copied", f"Copied '{kb.command}' to clipboard")
+        return
+
+    if args.execute_id:
+        kb = registry.get_by_id(args.execute_id)
+        if kb:
+            execute_action(kb)
+            notify_user("Keybinding Executed", f"Executed: {kb.command}")
+        return
+
+    if args.feed:
+        items = registry.get_by_source(args.feed)
+        for item in items:
+            print(item.to_fzf_line(use_ansi=True))
+        return
+
+    if args.cycle_source_feed:
+        # Dynamic source cycler state kept in temporary state file
+        state_file = Path(os.environ.get("TMPDIR", "/tmp")) / "keybinds_source_cycle.state"
+        sources = ["all"] + registry.get_sources()
+        current = "all"
+        if state_file.is_file():
+            try:
+                current = state_file.read_text().strip()
+            except Exception:
+                current = "all"
+
+        next_idx = (sources.index(current) + 1) % len(sources) if current in sources else 0
+        next_source = sources[next_idx]
+        try:
+            state_file.write_text(next_source)
+        except Exception:
+            pass
+
+        items = registry.get_by_source(next_source)
+        for item in items:
+            print(item.to_fzf_line(use_ansi=True))
+        return
+
+    if args.list_sources:
+        for s in registry.get_sources():
+            print(s)
+        return
+
+    if args.json:
+        items = registry.get_by_source(source_filter or "all")
+        data = [
+            {
+                "source": kb.source,
+                "mode": kb.mode,
+                "key": kb.key,
+                "command": kb.command,
+                "comment": kb.comment,
+                "file_path": kb.file_path,
+                "line_number": kb.line_number,
+            }
+            for kb in items
+        ]
+        print(json.dumps(data, indent=2))
+        return
+
+    run_fzf_interactive(registry, filter_query=query, source_filter=source_filter)
+
+
+if __name__ == "__main__":
+    main()

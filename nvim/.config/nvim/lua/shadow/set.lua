@@ -28,12 +28,12 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 
 vim.diagnostic.config({
-    virtual_text = true,
-    virtual_lines = false,
-    float = { border = "rounded" }
+	virtual_text = true,
+	virtual_lines = false,
+	float = { border = "rounded" },
 })
 
-require('vim._core.ui2').enable()
+require("vim._core.ui2").enable()
 
 -- Disable built-in regex-based LaTeX syntax & ftplugin
 vim.g.loaded_syntax = 1

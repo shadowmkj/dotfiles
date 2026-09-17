@@ -1,8 +1,12 @@
+config-version = 2
+
 after-startup-command = [
   'exec-and-forget borders active_color=0xfff3be7c inactive_color=0xff313244 width=8.0',
 ]
 # Start AeroSpace at login
-start-at-login = true
+start-at-login = false
+
+# focus-follows-mouse.enabled = true
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
 # enable-normalization-flatten-containers = true
@@ -11,7 +15,7 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # See: https://nikitabobko.github.io/AeroSpace/guide#layouts
 # The 'accordion-padding' specifies the size of accordion padding
 # You can set 0 to disable the padding feature
-accordion-padding = 0
+accordion-padding = 10
 
 # Possible values: tiles|accordion
 default-root-container-layout = 'tiles'
@@ -150,7 +154,6 @@ alt-m = 'macos-native-minimize'
 alt-tab = 'workspace-back-and-forth'
 # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
 alt-shift-tab = 'balance-sizes'
-
 # See: https://nikitabobko.github.io/AeroSpace/commands#mode
 alt-shift-cmd-ctrl-semicolon = 'mode service'
 
@@ -191,6 +194,10 @@ if.app-id = 'net.whatsapp.WhatsApp'
 run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
+if.window-title-regex-substring = 'keybinds'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.mitchellh.ghostty'
 run = 'move-node-to-workspace 1'
 
@@ -219,3 +226,4 @@ alt-7 = 'workspace 7'
 alt-8 = 'workspace 8'
 
 alt-shift-cmd-ctrl-quote = 'mode main'
+

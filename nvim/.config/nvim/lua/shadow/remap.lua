@@ -6,13 +6,13 @@ vim.keymap.set("n", "k", "gk")
 vim.keymap.set("n", "j", "gj")
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.keymap.set("n", "<C-w><", function()
-    local count = vim.v.count > 0 and vim.v.count or 10
-    vim.cmd("vertical resize -" .. count)
+	local count = vim.v.count > 0 and vim.v.count or 10
+	vim.cmd("vertical resize -" .. count)
 end)
 
 vim.keymap.set("n", "<C-w>>", function()
-    local count = vim.v.count > 0 and vim.v.count or 10
-    vim.cmd("vertical resize +" .. count)
+	local count = vim.v.count > 0 and vim.v.count or 10
+	vim.cmd("vertical resize +" .. count)
 end)
 
 -- Quick Save
@@ -55,11 +55,10 @@ vim.keymap.set("n", "<leader>ss", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left>
 -- Misc
 vim.keymap.set("n", "<leader>bd", "<cmd>bd<CR>")
 vim.keymap.set("n", "<leader>ls", "<cmd>!leetrs submit %<CR>") -- submit to leetcode
-vim.keymap.set("n", "<leader>lt", "<cmd>!leetrs test %<CR>")   -- submit test to leetcode
+vim.keymap.set("n", "<leader>lt", "<cmd>!leetrs test %<CR>") -- submit test to leetcode
 vim.keymap.set("n", "<leader>tt", "<cmd>:Themery<CR>")
 vim.keymap.set("n", "<leader>lr", "<cmd>:LiveRun<CR>")
-vim.keymap.set('n', '<leader>o', '<C-w>o', { desc = 'Close all windows except active' })
-
+vim.keymap.set("n", "<leader>o", "<C-w>o", { desc = "Close all windows except active" })
 
 -- Toggle Github Copilot
 -- vim.keymap.set("n", "<leader>cc", function()
@@ -70,7 +69,7 @@ vim.keymap.set('n', '<leader>o', '<C-w>o', { desc = 'Close all windows except ac
 
 -- wrap
 vim.keymap.set("n", "<leader>uw", function()
-    vim.wo.wrap = not vim.wo.wrap
+	vim.wo.wrap = not vim.wo.wrap
 end)
 
 vim.keymap.set("i", "jk", "<Esc>")
@@ -81,14 +80,47 @@ vim.keymap.set("i", "jk", "<Esc>")
 -- vim.keymap.set("n", "<left>", ":bp<cr>")
 -- vim.keymap.set("n", "<right>", ":bn<cr>")
 
-vim.keymap.set("n", "<leader>'", function()
-    if vim.env.TMUX then
-        vim.fn.system("tmux select-window -t :2")
-        vim.fn.system("tmux send-keys -t :2 'cargo r' C-m")
-    else
-        print("Not inside tmux")
-    end
-end, { desc = "Switch to tmux window 2 and run cargo r" })
-
 -- Simple Zoom
-vim.keymap.set('n', '<localleader>z', ':SimpleZoomToggle<CR>')
+vim.keymap.set("n", "<localleader>z", ":SimpleZoomToggle<CR>")
+
+-- Tab navigation
+vim.keymap.set("n", "<leader><Tab>", "<cmd>tabnext<CR>", { desc = "Next Tab" })
+vim.keymap.set("n", "<leader><S-Tab>", "<cmd>tabprevious<CR>", { desc = "Previous Tab" })
+vim.keymap.set("n", "<leader>tc", ":tabclose<CR>", { desc = "Close tab" })
+
+-- Terminal command shortcut with Fish shell completion
+local function fish_complete(arglead, cmdline, _)
+	local shell_cmd = cmdline:gsub("^%s*T%s*", "")
+	if shell_cmd == "" then
+		shell_cmd = arglead
+	end
+
+	local handle = io.popen(string.format("fish -c 'complete -C %q' 2>/dev/null", shell_cmd))
+	if not handle then
+		return {}
+	end
+	local output = handle:read("*a")
+	handle:close()
+
+	local results = {}
+	for line in output:gmatch("[^\r\n]+") do
+		local candidate = line:match("^[^\t]+")
+		if candidate and candidate ~= "" then
+			table.insert(results, candidate)
+		end
+	end
+	return results
+end
+
+vim.api.nvim_create_user_command("T", function(opts)
+	vim.cmd("terminal " .. opts.args)
+end, { nargs = "*", complete = fish_complete, desc = "Run terminal command with Fish completions" })
+
+vim.cmd([[
+  cnoreabbrev <expr> t (getcmdtype() == ':' && getcmdline() ==# 't') ? 'T' : 't'
+]])
+
+vim.keymap.set("n", "<leader>;", ":T ", { desc = "Terminal command" })
+
+
+

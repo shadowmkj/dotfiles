@@ -3,11 +3,20 @@
   product: 0x0000,
 }
 
+.device gaming_keyboard {
+  vendor:  0x258a,
+  product: 0x0049,
+}
+
+# MacBook built-in remappings
 .remap rcmd [device internal] : return
 .remap ralt [device internal] : backspace
 
+# External gaming keyboard remappings
+.remap ralt [device gaming_keyboard] : return
+
 # Browsers
-hyper - b : open -na "Google Chrome"
+hyper - b : open -na "Firefox"
 
 # Development
 hyper - 0x24 : open -a "Ghostty"
@@ -41,3 +50,5 @@ bm_mode < h : skhd -k "escape"; /Users/milan/scripts/bookmark.sh
 # Press Escape or Space to exit mode
 bm_mode < escape ; default
 bm_mode < space ; default
+
+

@@ -37,7 +37,14 @@ return {
 							},
 						})
 					end,
-
+					typst = function()
+						lspconfig.tinymist.setup({
+							settings = {
+								exportPdf = "onType", -- Automatically generates PDF on editing: "onType", "onSave", or "never"
+								formatterMode = "typstyle",
+							},
+						})
+					end,
 					rust_analyzer = function()
 						lspconfig.rust_analyzer.setup({
 							capabilities = capabilities,
@@ -65,11 +72,28 @@ return {
 	},
 	{ "rafamadriz/friendly-snippets" },
 	{
+		"L3MON4D3/LuaSnip",
+		version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+		build = "make install_jsregexp",
+		dependencies = { "rafamadriz/friendly-snippets" },
+		config = function()
+			require("luasnip.loaders.from_vscode").lazy_load()
+			require("luasnip.loaders.from_lua").lazy_load({
+				paths = { vim.fn.stdpath("config") .. "/lua/shadow/snippets" },
+			})
+			require("luasnip").config.set_config({
+				region_check_events = "InsertEnter",
+				delete_check_events = "InsertLeave",
+			})
+		end,
+	},
+	{
 		"hrsh7th/nvim-cmp",
 		dependencies = {
 			"hrsh7th/cmp-nvim-lsp",
 			"hrsh7th/cmp-buffer",
 			"saadparwaiz1/cmp_luasnip",
+			"L3MON4D3/LuaSnip",
 		},
 		event = "InsertEnter",
 		config = function()
@@ -116,18 +140,6 @@ return {
 				experimental = {
 					ghost_text = true,
 				},
-			})
-		end,
-	},
-	-- Lua Snip
-	{
-		"L3MON4D3/LuaSnip",
-		version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-		build = "make install_jsregexp",
-		config = function()
-			require("luasnip.loaders.from_vscode").lazy_load()
-			require("luasnip.loaders.from_lua").load({
-				paths = "~/.config/nvim/lua/brand-new/snippets",
 			})
 		end,
 	},
