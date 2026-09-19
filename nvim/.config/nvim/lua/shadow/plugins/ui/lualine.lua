@@ -1,7 +1,7 @@
 return {
     "nvim-lualine/lualine.nvim",
     config = function()
-        local ok, transparency = pcall(require, "brand-new.transparency")
+        local ok, transparency = pcall(require, "shadow.transparency")
         if ok then
             transparency.apply_lualine(vim.g.transparent_enabled ~= false)
         else

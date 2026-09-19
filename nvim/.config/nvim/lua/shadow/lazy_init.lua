@@ -12,6 +12,14 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-    spec = "shadow.lazy",
-    change_detection = { notify = false }
+	spec = {
+		{ import = "shadow.plugins.ui" },
+		{ import = "shadow.plugins.editor" },
+		{ import = "shadow.plugins.lsp" },
+		{ import = "shadow.plugins.git" },
+		{ import = "shadow.plugins.lang" },
+		{ import = "shadow.plugins.tools" },
+	},
+	change_detection = { notify = false },
 })
+

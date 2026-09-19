@@ -12,6 +12,77 @@ return {
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
 			local util = require("lspconfig.util")
 
+			-- Helper function to filter out external library definitions
+			local function goto_definition()
+				local client = vim.lsp.get_clients({ bufnr = 0 })[1]
+				local offset_encoding = client and client.offset_encoding or "utf-16"
+				local params = vim.lsp.util.make_position_params(0, offset_encoding)
+				vim.lsp.buf_request(0, "textDocument/definition", params, function(err, result, ctx, config)
+					if err then
+						vim.notify("LSP definition error: " .. err.message)
+						return
+					end
+
+					if result == nil or vim.tbl_isempty(result) then
+						print("Definition not found")
+						return
+					end
+
+					if not vim.islist(result) then
+						vim.lsp.util.show_document(result, "utf-8")
+						return
+					end
+
+					local filtered_result = {}
+					for _, location in ipairs(result) do
+						local uri = location.uri or location.targetUri
+						if not string.match(uri, "%.cargo") and not string.match(uri, "%.rustup") then
+							table.insert(filtered_result, location)
+						end
+					end
+
+					if #filtered_result > 0 then
+						vim.lsp.util.show_document(filtered_result[1], "utf-8")
+					else
+						vim.lsp.util.show_document(result[1], "utf-8")
+					end
+				end)
+			end
+
+			-- LSP keybindings on attach
+			vim.api.nvim_create_autocmd("LspAttach", {
+				group = vim.api.nvim_create_augroup("LspAttachGroup", { clear = true }),
+				callback = function(e)
+					local opts = { buffer = e.buf }
+					vim.keymap.set("n", "gd", goto_definition, opts)
+					vim.keymap.set("n", "K", function()
+						vim.lsp.buf.hover({ border = "rounded" })
+					end, opts)
+					vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
+					vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, opts)
+					vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
+					vim.keymap.set("n", "<leader>=", function()
+						vim.lsp.buf.format({ async = false })
+					end, opts)
+					vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
+					vim.keymap.set("n", "]d", function()
+						vim.diagnostic.jump({ count = 1 })
+					end, opts)
+					vim.keymap.set("n", "[d", function()
+						vim.diagnostic.jump({ count = -1 })
+					end, opts)
+					vim.keymap.set({ "n", "v" }, "<leader>a", vim.lsp.buf.code_action, { buffer = e.buf, desc = "LSP Code Action" })
+					vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+					vim.keymap.set("n", "<leader>xq", vim.diagnostic.setloclist, opts)
+
+					-- Disable semantic tokens if needed (prevents rust_analyzer from overriding colors)
+					local client = vim.lsp.get_client_by_id(e.data.client_id)
+					if client ~= nil then
+						client.server_capabilities.semanticTokensProvider = nil
+					end
+				end,
+			})
+
 			mason.setup()
 			mason_lspconfig.setup({
 				ensure_installed = {
