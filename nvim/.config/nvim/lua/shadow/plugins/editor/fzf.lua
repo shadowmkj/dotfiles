@@ -6,10 +6,6 @@ return
         local fzf = require("fzf-lua")
         local config = fzf.config
         local actions = fzf.actions
-        vim.keymap.set('n', '<leader>/', function()
-            fzf.live_grep({
-                loclist = true })
-        end, { desc = "Fzf Live Grep" })
         -- Quickfix
         config.defaults.keymap.fzf["ctrl-q"] = "select-all+accept"
         config.defaults.keymap.fzf["ctrl-u"] = "half-page-up"
@@ -160,6 +156,13 @@ return
     keys = {
         { "<c-j>", "<c-j>", ft = "fzf", mode = "t", nowait = true },
         { "<c-k>", "<c-k>", ft = "fzf", mode = "t", nowait = true },
+        {
+            "<leader>/",
+            function()
+                require("fzf-lua").live_grep({ loclist = true })
+            end,
+            desc = "Live Grep",
+        },
         {
             "<leader>,",
             "<cmd>FzfLua buffers sort_mru=true sort_lastused=true<cr>",

@@ -137,6 +137,16 @@ return {
 							},
 						})
 					end,
+					clangd = function()
+						lspconfig.clangd.setup({
+							capabilities = capabilities,
+							cmd = {
+								"clangd",
+								"--fallback-style={BasedOnStyle: LLVM, SortIncludes: Never}",
+								"--header-insertion=never",
+							},
+						})
+					end,
 				},
 			})
 		end,

@@ -26,6 +26,7 @@ vim.opt.isfname:append("@-@")
 vim.g.base16colorspace = 256
 vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
+vim.opt.clipboard = "unnamedplus"
 
 vim.diagnostic.config({
 	virtual_text = true,
@@ -34,7 +35,6 @@ vim.diagnostic.config({
 })
 
 vim.opt.cmdheight = 1
-
 
 -- Disable built-in regex-based LaTeX syntax & ftplugin
 vim.g.loaded_syntax = 1

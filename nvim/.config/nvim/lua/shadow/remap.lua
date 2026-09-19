@@ -80,8 +80,43 @@ vim.keymap.set("i", "jk", "<Esc>")
 -- vim.keymap.set("n", "<left>", ":bp<cr>")
 -- vim.keymap.set("n", "<right>", ":bn<cr>")
 
--- Simple Zoom
-vim.keymap.set("n", "<localleader>z", ":SimpleZoomToggle<CR>")
+-- Simple Zoom (true fullscreen via temporary tab with tabline suppressed)
+local saved_showtabline = nil
+
+vim.api.nvim_create_autocmd("TabClosed", {
+	callback = function()
+		if saved_showtabline ~= nil then
+			local has_zoomed = false
+			for _, t in ipairs(vim.api.nvim_list_tabpages()) do
+				if vim.t[t].zoomed_tab then
+					has_zoomed = true
+					break
+				end
+			end
+			if not has_zoomed then
+				vim.opt.showtabline = saved_showtabline
+				saved_showtabline = nil
+			end
+		end
+	end,
+})
+
+local function toggle_zoom()
+	if vim.t.zoomed_tab then
+		vim.cmd("tabclose")
+	elseif #vim.api.nvim_tabpage_list_wins(0) > 1 then
+		if saved_showtabline == nil then
+			saved_showtabline = vim.o.showtabline
+		end
+		vim.cmd("tab split")
+		vim.t.zoomed_tab = true
+		vim.opt.showtabline = 0
+	end
+end
+
+vim.api.nvim_create_user_command("SimpleZoomToggle", toggle_zoom, { desc = "Toggle fullscreen zoom (tabline hidden)" })
+vim.keymap.set("n", "<leader>z", toggle_zoom, { desc = "Toggle fullscreen zoom" })
+vim.keymap.set("n", "<localleader>z", toggle_zoom, { desc = "Toggle fullscreen zoom" })
 
 -- Tab navigation
 vim.keymap.set("n", "<leader><Tab>", "<cmd>tabnext<CR>", { desc = "Next Tab" })
@@ -121,4 +156,5 @@ vim.cmd([[
 ]])
 
 vim.keymap.set("n", "<leader>;", ":T ", { desc = "Terminal command" })
-vim.keymap.set("n", "<leader>a", "ggVG", { desc = "Select all" })
+vim.keymap.set("n", "<leader>A", "ggVG", { desc = "Select all" })
+vim.keymap.set("n", "<leader>R", ":restart<CR>", { desc = "Restart Neovim" })

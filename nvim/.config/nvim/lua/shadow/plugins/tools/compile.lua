@@ -30,7 +30,21 @@ return {
 					rust = "cargo run",
 				},
 			}
-			vim.keymap.set("n", "<leader>cc", "<cmd>below Recompile 10<CR>")
+			-- Default compilation split window to open at the bottom with a compact height
+			local utils = require("compile-mode.utils")
+			local orig_split_unless_open = utils.split_unless_open
+			utils.split_unless_open = function(opts, smods, count)
+				smods = smods or {}
+				if not smods.split or smods.split == "" then
+					smods.split = "belowright"
+				end
+				if not count or count == 0 then
+					count = 8
+				end
+				return orig_split_unless_open(opts, smods, count)
+			end
+
+			vim.keymap.set("n", "<leader>cc", "<cmd>Recompile<CR>", { desc = "Recompile" })
 		end,
 	},
 }
