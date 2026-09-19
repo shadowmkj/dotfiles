@@ -44,6 +44,7 @@ function M.apply_lualine(is_transparent)
     local ok, lualine = pcall(require, "lualine")
     if not ok then return end
 
+    package.loaded["lualine.themes.auto"] = nil
     local auto_theme_ok, auto_theme = pcall(require, "lualine.themes.auto")
     if not auto_theme_ok then return end
 

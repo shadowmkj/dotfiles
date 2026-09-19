@@ -33,7 +33,8 @@ vim.diagnostic.config({
 	float = { border = "rounded" },
 })
 
-require("vim._core.ui2").enable()
+vim.opt.cmdheight = 1
+
 
 -- Disable built-in regex-based LaTeX syntax & ftplugin
 vim.g.loaded_syntax = 1

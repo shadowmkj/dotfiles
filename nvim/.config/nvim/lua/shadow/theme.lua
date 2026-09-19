@@ -135,7 +135,7 @@ local function main()
 	end
 
 	vim.cmd("colorscheme " .. current_theme_name)
-	-- require("shadow.transparency").setup()
+	require("shadow.transparency").setup()
 	M.apply_comments()
 	M.setup_user_commands()
 end
