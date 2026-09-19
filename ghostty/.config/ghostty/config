@@ -1,6 +1,6 @@
 theme = "tinted-theming"
 font-family = IosevkaTerm Nerd Font Mono
-font-size = 22
+font-size = 24
 background-blur-radius = 15
 mouse-hide-while-typing = true
 macos-option-as-alt = true
@@ -17,5 +17,3 @@ minimum-contrast = 2
 keybind = super+shift+o=toggle_background_opacity
 
 macos-icon = glass
-
-

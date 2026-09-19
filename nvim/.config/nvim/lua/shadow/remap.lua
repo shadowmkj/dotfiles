@@ -121,6 +121,4 @@ vim.cmd([[
 ]])
 
 vim.keymap.set("n", "<leader>;", ":T ", { desc = "Terminal command" })
-
-
-
+vim.keymap.set("n", "<leader>a", "ggVG", { desc = "Select all" })
