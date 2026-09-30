@@ -25,10 +25,11 @@ M.presets = {
 	cyan = "#7dcfff", -- Vibrant Electric Cyan
 	pink = "#d3869b", -- Vivid Magenta / Pink
 	white = "#fbf1c7", -- High-contrast Bright Ivory
+	gray = "#808087",
 }
 
 M.comment_config = {
-	fg = M.presets.amber, -- Highlighted color for comments (change hex or preset here)
+	fg = M.presets.gray, -- Highlighted color for comments (change hex or preset here)
 	italic = true, -- Italicize comments (true / false)
 	bold = false, -- Bold comments (true / false)
 }

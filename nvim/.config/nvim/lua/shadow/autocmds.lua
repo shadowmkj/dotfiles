@@ -46,6 +46,20 @@ autocmd("BufReadPost", {
 	end,
 })
 
+-- Jump to last edit position in buffer
+autocmd("BufReadPost", {
+	pattern = "*",
+	callback = function()
+		if vim.fn.line("'\"") > 1 and vim.fn.line("'\"") <= vim.fn.line("$") then
+			-- except for in git commit messages
+			-- https://stackoverflow.com/questions/31449496/vim-ignore-specifc-file-in-autocommand
+			if not vim.fn.expand("%:p"):find(".git", 1, true) then
+				vim.cmd('exe "normal! g\'\\""')
+			end
+		end
+	end,
+})
+
 -- LaTeX text wrapping and colorcolumn
 autocmd("FileType", {
 	pattern = { "tex", "plaintex" },
@@ -60,6 +74,15 @@ autocmd("FileType", {
 autocmd("FileType", {
 	pattern = { "rust" },
 	command = "set colorcolumn=100",
+})
+
+-- Disable automatic comment continuation when pressing 'o' or Enter
+autocmd("FileType", {
+	group = ShadowGroup,
+	pattern = "*",
+	callback = function()
+		vim.opt_local.formatoptions:remove({ "c", "r", "o" })
+	end,
 })
 
 -- Global tool defaults

@@ -4,7 +4,7 @@ vim.opt.relativenumber = true
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
-vim.opt.expandtab = true
+vim.opt.expandtab = false
 -- vim.opt.guifont = "Iosevka Nerd Font:h14"
 
 vim.opt.smartindent = true
@@ -18,15 +18,19 @@ vim.opt.undofile = true
 
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.vb = true
 
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
+vim.opt.wildmode = "list:longest"
+vim.opt.wildignore = ".hg,.svn,*~,*.png,*.jpg,*.gif,*.min.js,*.swp,*.o,vendor,dist,_site"
 
 vim.g.base16colorspace = 256
 vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
-vim.opt.clipboard = "unnamedplus"
 
 vim.diagnostic.config({
 	virtual_text = true,
@@ -42,4 +46,3 @@ vim.g.loaded_matchit = 1
 
 -- Enable conceallevel in .tex buffers
 vim.opt.conceallevel = 1
-vim.g.tex_conceal = "abdmg"

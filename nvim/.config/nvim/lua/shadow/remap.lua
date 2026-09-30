@@ -28,6 +28,9 @@ vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 vim.keymap.set("n", "<leader>q", "<cmd>:q<CR>")
 
+-- Open new file
+vim.keymap.set("n", "<leader>n", ':e <C-R>=expand("%:p:h") . "/" <cr>')
+
 -- Copy/Paste from/to clipboard
 vim.keymap.set("x", "<leader>p", [["_dhp]])
 vim.keymap.set("n", "<leader>P", [[ve"_dhp]])
@@ -156,5 +159,9 @@ vim.cmd([[
 ]])
 
 vim.keymap.set("n", "<leader>;", ":T ", { desc = "Terminal command" })
+vim.keymap.set("n", "<leader>'", function()
+	-- Send "!!" and "Enter" to the last active window, then switch to it
+	vim.fn.system("tmux send-keys -t {last} '!!' Enter && tmux last-window")
+end, { desc = "Run Last command" })
 vim.keymap.set("n", "<leader>A", "ggVG", { desc = "Select all" })
 vim.keymap.set("n", "<leader>R", ":restart<CR>", { desc = "Restart Neovim" })

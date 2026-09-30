@@ -1,28 +1,25 @@
-if true then
-	return {}
-end
 return {
-	{
-		"folke/sidekick.nvim",
-		opts = {
-			cli = {
-				tools = {
-					antigravity = {
-						cmd = { "agy" },
-					},
-				},
-			},
-		},
-		keys = {
-			{
-				"<leader>aa",
-				function()
-					require("sidekick.cli").toggle()
-				end,
-				desc = "Sidekick Toggle CLI",
-			},
-		},
-	},
+	-- {
+	-- 	"folke/sidekick.nvim",
+	-- 	opts = {
+	-- 		cli = {
+	-- 			tools = {
+	-- 				antigravity = {
+	-- 					cmd = { "agy" },
+	-- 				},
+	-- 			},
+	-- 		},
+	-- 	},
+	-- 	keys = {
+	-- 		{
+	-- 			"<leader>aa",
+	-- 			function()
+	-- 				require("sidekick.cli").toggle()
+	-- 			end,
+	-- 			desc = "Sidekick Toggle CLI",
+	-- 		},
+	-- 	},
+	-- },
 	{
 		"shadowmkj/review.nvim",
 		dir = "~/Documents/Desk/Apps/review.nvim",

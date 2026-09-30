@@ -71,7 +71,12 @@ return {
 					vim.keymap.set("n", "[d", function()
 						vim.diagnostic.jump({ count = -1 })
 					end, opts)
-					vim.keymap.set({ "n", "v" }, "<leader>a", vim.lsp.buf.code_action, { buffer = e.buf, desc = "LSP Code Action" })
+					vim.keymap.set(
+						{ "n", "v" },
+						"<leader>a",
+						vim.lsp.buf.code_action,
+						{ buffer = e.buf, desc = "LSP Code Action" }
+					)
 					vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 					vim.keymap.set("n", "<leader>xq", vim.diagnostic.setloclist, opts)
 
@@ -79,6 +84,9 @@ return {
 					local client = vim.lsp.get_client_by_id(e.data.client_id)
 					if client ~= nil then
 						client.server_capabilities.semanticTokensProvider = nil
+						if client.server_capabilities.inlayHintProvider then
+							vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+						end
 					end
 				end,
 			})
@@ -126,9 +134,18 @@ return {
 							end,
 							settings = {
 								["rust-analyzer"] = {
-									cargo = { allFeatures = true },
+									cargo = {
+										allFeatures = true,
+										buildScripts = {
+											enable = true,
+											rebuildOnSave = true,
+										},
+									},
+									procMacro = {
+										enable = true,
+									},
 									check = {
-										command = "check",
+										command = "clippy",
 									},
 									imports = {
 										group = { enable = true },

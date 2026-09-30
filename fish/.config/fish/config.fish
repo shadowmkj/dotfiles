@@ -1,8 +1,15 @@
 function fish_greeting
 	echo -e (uname -ro | awk '{print " \\\\e[1mOS: \\\\e[0;32m"$0"\\\\e[0m"}')
-	echo -e (uptime | sed 's/^.*up  *\([^,]*\),.*/\1/' | awk '{print " \\\\e[1mUptime: \\\\e[0;32m"$0"\\\\e[0m"}')
-	echo -e (uname -n | awk '{print " \\\\e[1mHostname: \\\\e[0;32m"$0"\\\\e[0m"}')
-
+	echo -e (uptime | sed 's/^.*up  *\([^,]*\),.*/\1/' | \
+        awk '{print " \\\\e[1mUptime: \\\\e[0;32m"$0"\\\\e[0m"}')
+	echo -e (uname -n | \
+        awk '{print " \\\\e[1mHostname: \\\\e[0;32m"$0"\\\\e[0m"}')
+    echo -e " \\e[1mDisk usage:\\e[0m"
+	echo -ne (\
+        df -h | awk '{if ($1 == "/dev/disk3s1") {print $0}}' | \
+        awk '{printf "\\t%s / %s (%s) Free: %s\\n", $3, $2, $5, $4}'
+	)
+    echo
 	echo -e " \e[1mTodos:\e[0;32m"
 	if test -s ~/todo
 		set_color magenta
@@ -62,6 +69,7 @@ alias lc="leetrs"
 alias cg="cargo"
 alias agyc="agy -c"
 alias ofinder="open -a Finder ."
+alias o="open"
 
 # git aliases
 alias gs="git status"
@@ -130,6 +138,14 @@ function y
     end
     rm -f -- "$tmp"
 end
+
+# Last command
+function last_history_item
+    echo $history[1]
+end
+
+abbr -a !! --position anywhere --function last_history_item
+
 
 
 
@@ -327,39 +343,6 @@ fish_add_path /Users/milan/development/flutter/bin
 # Added by Antigravity CLI installer
 set -gx PATH "/Users/milan/.local/bin" $PATH
 
+set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /Users/milan/.ghcup/bin $PATH # ghcup-env
 
-# ------------------------------------------------------------------------------
-# Optional: Fuzzy Tab Completion with fzf
-# Uncomment the function and bind statements below to enable fzf tab completion.
-# ------------------------------------------------------------------------------
-# function fzf-complete
-#     set -l cmd (commandline -c)
-#     test -z "$cmd"; and set cmd ""
-#     set -l current_token (commandline -ct)
-#
-#     # Generate completion list and pipe to fzf floating menu
-#     set -l completions (complete -C"$cmd")
-#     test -z "$completions"; and return
-#
-#     set -l result (printf "%s\n" $completions | fzf --height=40% --border=rounded --layout=reverse --delimiter=\t --query="$current_token" --select-1 --exit-0)
-#
-#     if test -n "$result"
-#         set -l val (string match -r "^[^\t]+" -- "$result")
-#         if test -n "$val"
-#             # Escape special characters while preserving leading ~ and $
-#             set -l escaped (string escape -n -- "$val" | string replace -r "^\x5C~" "~" | string replace -r "^\\\\\\\$" "\$\$")
-#             if string match -q "*/" -- "$val"
-#                 commandline -rt -- "$escaped"
-#             else
-#                 commandline -rt -- "$escaped "
-#             end
-#         end
-#     end
-#     commandline -f repaint
-# end
-#
-# # Bind Tab to open the fzf menu in both normal and insert modes
-# bind \t fzf-complete
-# bind -M insert \t fzf-complete
-#
-#
+set -gx MACOSX_DEPLOYMENT_TARGET 15.0

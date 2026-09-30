@@ -1,5 +1,6 @@
 return {
 	"nvim-lualine/lualine.nvim",
+	-- enabled = false,
 	config = function()
 		local ok, transparency = pcall(require, "shadow.transparency")
 		if ok then
