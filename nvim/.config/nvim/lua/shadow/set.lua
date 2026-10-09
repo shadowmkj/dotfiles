@@ -44,5 +44,4 @@ vim.opt.cmdheight = 1
 vim.g.loaded_syntax = 1
 vim.g.loaded_matchit = 1
 
--- Enable conceallevel in .tex buffers
-vim.opt.conceallevel = 1
+vim.opt.conceallevel = 0

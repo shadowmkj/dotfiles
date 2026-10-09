@@ -29,7 +29,14 @@ return {
 
 		return {
 			"default-title",
-			fzf_colors = true,
+			fzf_colors = {
+				true,
+				["info"] = { "fg", "PreProc" },
+				["prompt"] = { "fg", "Label" },
+				["marker"] = { "fg", "Keyword" },
+				["spinner"] = { "fg", "Label" },
+				["header"] = { "fg", "Comment" },
+			},
 			fzf_opts = {
 				["--no-scrollbar"] = true,
 				["--layout"] = "default",
@@ -169,7 +176,7 @@ return {
 			"<leader><space>",
 			function()
 				local opts = {}
-				opts.cmd = "fd --color=never --hidden --type f --type l --exclude .git"
+				opts.cmd = "fd --color=never --hidden --type f --type l --exclude .git --exclude *.lock"
 				local base = vim.fn.fnamemodify(vim.fn.expand("%"), ":h:.:S")
 				if base ~= "." then
 					-- if there is no current file,

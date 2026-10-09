@@ -46,6 +46,10 @@ return {
 					-- Optional: Enable Treesitter indentation only if treesitter started successfully
 					vim.bo[args.buf].indentexpr = "v:lua.require('nvim-treesitter').indentexpr()"
 				end
+
+				-- I like less colors
+				vim.api.nvim_set_hl(0, "@property", { link = "Normal" })
+				vim.api.nvim_set_hl(0, "@variable", { link = "Normal" })
 			end,
 		})
 	end,
