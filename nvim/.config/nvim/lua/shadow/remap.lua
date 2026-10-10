@@ -49,6 +49,8 @@ vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz")
 -- Move to beginning / end using homerow
 vim.keymap.set("n", "H", "^")
 vim.keymap.set("n", "L", "$")
+vim.keymap.set("x", "H", "^")
+vim.keymap.set("x", "L", "$")
 
 vim.keymap.set("n", "<leader>ss", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
@@ -165,3 +167,4 @@ vim.keymap.set("n", "<leader>'", function()
 end, { desc = "Run Last command" })
 vim.keymap.set("n", "<leader>A", "ggVG", { desc = "Select all" })
 vim.keymap.set("n", "<leader>R", ":restart<CR>", { desc = "Restart Neovim" })
+vim.keymap.set("v", "<Leader>n", ":norm ", { desc = "Run normal command on selection" })
