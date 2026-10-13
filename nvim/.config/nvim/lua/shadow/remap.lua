@@ -65,7 +65,6 @@ vim.keymap.set("n", "<leader>ls", "<cmd>bo 10sp | term leetrs submit %<CR>") -- 
 vim.keymap.set("n", "<leader>lt", "<cmd>bo 10sp | term leetrs test %<CR>") -- submit test to leetcode
 vim.keymap.set("n", "<leader>tt", "<cmd>:Themery<CR>")
 vim.keymap.set("n", "<leader>lr", "<cmd>:LiveRun<CR>")
-vim.keymap.set("n", "<leader>o", "<C-w>o", { desc = "Close all windows except active" })
 -- Exit Terminal mode easily
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 vim.keymap.set("t", "jk", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
@@ -173,3 +172,23 @@ end, { desc = "Run Last command" })
 vim.keymap.set("n", "<leader>A", "ggVG", { desc = "Select all" })
 vim.keymap.set("n", "<leader>R", ":restart<CR>", { desc = "Restart Neovim" })
 vim.keymap.set("v", "<Leader>n", ":norm ", { desc = "Run normal command on selection" })
+
+-- Molten
+vim.keymap.set("n", "<leader>mm", "<cmd>:MoltenInit<CR>", { desc = "Toggle image display" })
+vim.keymap.set("n", "<localleader>E", ":MoltenEvaluateOperator<CR>", { silent = true, desc = "run operator selection" })
+vim.keymap.set("n", "<localleader>md", ":MoltenDelete<CR>", { silent = true, desc = "molten delete cell" })
+vim.keymap.set("n", "<localleader>ms", ":MoltenShowOutput<CR>", { silent = true, desc = "Show output window" })
+vim.keymap.set("n", "<leader>me", ":noautocmd MoltenEnterOutput<CR>", { silent = true, desc = "Focus output window" })
+vim.keymap.set("n", "<leader>mo", ":MoltenHideOutput<CR>", { silent = true, desc = "Hide output window" })
+vim.keymap.set("n", "<leader>mi", "<cmd>ImageToggle<CR>", { desc = "Toggle image display" })
+
+local toggle = require("shadow.custom.toggle_quatro") -- adjust path to where you saved the module
+
+-- Toggle the output of the current cell
+vim.keymap.set("n", "<leader>mh", toggle.toggle_cell, { desc = "Toggle cell output" })
+
+-- Toggle all outputs across the whole buffer
+vim.keymap.set("n", "<leader>mH", toggle.toggle_all, { desc = "Toggle all outputs" })
+
+-- Toggle plot images via image.nvim
+vim.keymap.set("n", "<leader>mp", "<cmd>ImageToggle<CR>", { desc = "Toggle plot images" })

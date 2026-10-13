@@ -45,3 +45,9 @@ vim.g.loaded_syntax = 1
 vim.g.loaded_matchit = 1
 
 vim.opt.conceallevel = 0
+
+-- Python 3 provider for remote plugins (e.g. Molten)
+local python3_host = vim.fn.expand("~/.virtualenvs/neovim/bin/python3")
+if vim.fn.filereadable(python3_host) == 1 then
+	vim.g.python3_host_prog = python3_host
+end

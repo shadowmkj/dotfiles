@@ -82,6 +82,8 @@ return {
 
 					-- Disable semantic tokens if needed (prevents rust_analyzer from overriding colors)
 					local client = vim.lsp.get_client_by_id(e.data.client_id)
+					-- In your LSP on_attach function:
+
 					if client ~= nil then
 						client.server_capabilities.semanticTokensProvider = nil
 						if client.server_capabilities.inlayHintProvider then

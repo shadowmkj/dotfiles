@@ -35,15 +35,11 @@ return {
 			local basename = vim.fs.basename(cwd)
 			_99.setup({
 				provider = _99.Providers.AgyCLIProvider, -- default: OpenCodeProvider
-				model = "gemini-3.7-flash-low",
+				model = "gemini-3.8-flash-low",
 				logger = {
 					level = _99.DEBUG,
 					path = "/tmp/" .. basename .. ".99.debug",
 					print_on_error = true,
-				},
-				provider_extra_args = {
-					"--effort",
-					"low",
 				},
 				-- When setting this to something that is not inside the CWD tools
 				-- such as claude code or opencode will have permission issues
