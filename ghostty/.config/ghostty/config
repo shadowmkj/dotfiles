@@ -1,12 +1,15 @@
 theme = "tinted-theming"
-font-family = IosevkaTerm Nerd Font Mono
-font-size = 24
+# font-family = IosevkaTerm Nerd Font Mono
+font-family = Agave Nerd Font Mono
+# font-family = 0xProto Nerd Font
+font-size = 26
 background-blur-radius = 15
 mouse-hide-while-typing = true
 macos-option-as-alt = true
 background-opacity = 0.97
 cursor-style = block
 cursor-style-blink = false
+# cursor-color = #ffdd33
 window-padding-x = 8
 window-padding-y = 8
 

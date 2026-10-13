@@ -85,6 +85,12 @@ autocmd("FileType", {
 	end,
 })
 
+autocmd("TermClose", {
+	callback = function()
+		vim.cmd("stopinsert")
+	end,
+})
+
 -- Global tool defaults
 vim.env.FZF_DEFAULT_COMMAND = "rg --hidden"
 pcall(vim.cmd, "Copilot disable")

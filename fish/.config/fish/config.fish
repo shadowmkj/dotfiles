@@ -52,6 +52,7 @@ alias ll='eza --long --all --header --icons --git'
 alias y='yazi'
 
 alias v='nvim'
+alias py='python3'
 alias ta='tmux attach'
 alias lg='lazygit'
 alias pms='podman machine stop'
@@ -70,6 +71,12 @@ alias cg="cargo"
 alias agyc="agy -c"
 alias ofinder="open -a Finder ."
 alias o="open"
+
+# changelog (git cliff)
+alias clbeta="git cliff --tag"
+function clrelease
+    git cliff --tag-pattern 'v[0-9]+\.[0-9]+\.[0-9]+$' --tag $argv
+end
 
 # git aliases
 alias gs="git status"
@@ -105,6 +112,7 @@ alias gst="git stash"
 alias gstp="git stash pop"
 alias gstl="git stash list"
 alias gundo="git reset --soft HEAD~1"
+
 
 function gop
     set full_remote (git remote get-url origin)
@@ -196,6 +204,21 @@ function tnew
             tmux attach-session -t "$session_name"
         end
     end
+end
+
+# Empty Trash
+function empty-trash --description "Empty macOS ~/.Trash"
+    # Match all visible and hidden files except . and ..
+    set -l items ~/.Trash/* ~/.Trash/.[!.]* ~/.Trash/..?*
+
+    # If glob fails or directory is empty, Fish sets items to nothing
+    if test (count $items) -eq 0
+        echo "Trash is already empty."
+        return 0
+    end
+
+    rm -rf $items 2>/dev/null
+    echo "Trash emptied."
 end
 
 function tnewc
@@ -296,12 +319,53 @@ function dbm --description "Delete bookmark"
     end
 end
 
+
+function tocamel --description "snake or pascal case to camel case"
+    # Lowercase leading letter at word boundaries and capitalize letters following underscores
+    if test (count $argv) -gt 0
+        printf "%s\n" $argv | perl -pe 's/\b([A-Z])/\l$1/g; s/_([a-z])/\u$1/g'
+    else
+        perl -pe 's/\b([A-Z])/\l$1/g; s/_([a-z])/\u$1/g'
+    end
+end
+
+
+function topascal --description "snake case to pascal case"
+    # Capitalize the first character at word boundaries as well as any letter following an underscore
+    if test (count $argv) -gt 0
+        printf "%s\n" $argv | perl -pe 's/\b([a-z])/\u$1/g; s/_([a-z])/\u$1/g'
+    else
+        perl -pe 's/\b([a-z])/\u$1/g; s/_([a-z])/\u$1/g'
+    end
+end
+
+function ptosnake --description "pascal case to snake case"
+    # Split on lowercase/digit -> uppercase or uppercase -> uppercase+lowercase boundaries
+    if test (count $argv) -gt 0
+        printf "%s\n" $argv | perl -pe '
+            s/(?<=[a-z0-9])(?=[A-Z])/_\L/g;
+            s/(?<=[A-Z])(?=[A-Z][a-z])/_\L/g;
+            s/([A-Z])/\L$1/g
+        '
+    else
+        perl -pe '
+            s/(?<=[a-z0-9])(?=[A-Z])/_\L/g;
+            s/(?<=[A-Z])(?=[A-Z][a-z])/_\L/g;
+            s/([A-Z])/\L$1/g
+        '
+    end
+end
+
+alias tosnake=ptosnake
+
+
+
+
 bind \cr _atuin_bind_up
 bind -M insert \cl forward-char
 bind -M insert \cr _atuin_bind_up
 
 bind ctrl-shift-t 'theme cycle'
-
 bind up up-or-search
 bind -M insert up up-or-search
 

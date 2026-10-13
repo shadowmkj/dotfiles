@@ -97,6 +97,9 @@ return {
 			use_default_keymaps = false,
 			skip_confirm_for_simple_edits = true,
 			delete_to_trash = true,
+			view_options = {
+				show_hidden = true,
+			},
 
 			-- --------------------------------------------------------------------------
 			-- Column Layout & Highlighting
@@ -147,6 +150,25 @@ return {
 					callback = function()
 						local oil = require("oil")
 						find_and_open_in_oil(oil.get_current_dir(), "Dirs> ")
+					end,
+				},
+				["<C-j>"] = {
+					desc = "Jump to dir using Zoxide in Oil",
+					callback = function()
+						vim.ui.input({
+							prompt = "Query: ",
+							completion = "dir",
+							default = "",
+						}, function(input)
+							if input == nil then
+								return -- User cancelled input prompt
+							end
+
+							local oil = require("oil")
+							local current_dir = oil.get_current_dir()
+							local target_dir = resolve_zoxide_dir(input) or current_dir
+							oil.open(target_dir)
+						end)
 					end,
 				},
 

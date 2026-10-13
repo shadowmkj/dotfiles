@@ -5,15 +5,6 @@ vim.g.maplocalleader = " "
 vim.keymap.set("n", "k", "gk")
 vim.keymap.set("n", "j", "gj")
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
-vim.keymap.set("n", "<C-w><", function()
-	local count = vim.v.count > 0 and vim.v.count or 10
-	vim.cmd("vertical resize -" .. count)
-end)
-
-vim.keymap.set("n", "<C-w>>", function()
-	local count = vim.v.count > 0 and vim.v.count or 10
-	vim.cmd("vertical resize +" .. count)
-end)
 
 -- Quick Save
 vim.keymap.set("n", "<leader>w", "<cmd>w<cr>")
@@ -27,6 +18,11 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 vim.keymap.set("n", "<leader>q", "<cmd>:q<CR>")
+
+-- Enter Window Resize Submode (Smart Directional)
+vim.keymap.set("n", "<leader>rr", function()
+	require("shadow.custom.smart_resize").smart_resize()
+end, { desc = "Enter smart directional window resize submode" })
 
 -- Open new file
 vim.keymap.set("n", "<leader>n", ':e <C-R>=expand("%:p:h") . "/" <cr>')
@@ -58,12 +54,21 @@ vim.keymap.set("n", "<leader>ss", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left>
 -- vim.keymap.set("n", "<leader>m", "ct_")
 
 -- Misc
+vim.keymap.set("n", "<leader>C", "<cmd>:Conf<CR>")
 vim.keymap.set("n", "<leader>bd", "<cmd>bd<CR>")
-vim.keymap.set("n", "<leader>ls", "<cmd>!leetrs submit %<CR>") -- submit to leetcode
-vim.keymap.set("n", "<leader>lt", "<cmd>!leetrs test %<CR>") -- submit test to leetcode
+
+-- Press Ctrl+x while inside the terminal to close it instantly
+vim.keymap.set("t", "<C-x>", "<C-\\><C-n>:bd!<CR>", { silent = true })
+
+vim.keymap.set("n", "<leader>bD", "<cmd>bd!<CR>")
+vim.keymap.set("n", "<leader>ls", "<cmd>bo 10sp | term leetrs submit %<CR>") -- submit to leetcode
+vim.keymap.set("n", "<leader>lt", "<cmd>bo 10sp | term leetrs test %<CR>") -- submit test to leetcode
 vim.keymap.set("n", "<leader>tt", "<cmd>:Themery<CR>")
 vim.keymap.set("n", "<leader>lr", "<cmd>:LiveRun<CR>")
 vim.keymap.set("n", "<leader>o", "<C-w>o", { desc = "Close all windows except active" })
+-- Exit Terminal mode easily
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+vim.keymap.set("t", "jk", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- Toggle Github Copilot
 -- vim.keymap.set("n", "<leader>cc", function()
