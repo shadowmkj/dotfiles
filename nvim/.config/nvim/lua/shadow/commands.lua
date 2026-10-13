@@ -1,0 +1,5 @@
+vim.api.nvim_create_user_command("Conf", function()
+	vim.cmd("tabnew")
+	require("oil").open("~/.config/nvim")
+	vim.cmd("tcd ~/.config/nvim")
+end, { desc = "Open Neovim config in a new tab" })
