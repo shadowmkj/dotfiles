@@ -9,6 +9,16 @@ function fish_greeting
         df -h | awk '{if ($1 == "/dev/disk3s1") {print $0}}' | \
         awk '{printf "\\t%s / %s (%s) Free: %s\\n", $3, $2, $5, $4}'
 	)
+	echo
+	set percentage (memory_pressure | rg % | awk -F' ' '{print $5}')
+	set value (string replace '%' '' $percentage)
+	if test $value -gt 75
+        set_color red
+    else
+        set_color green
+    end
+	echo " Memory Usage: $percentage"
+	set_color normal
     echo
 	echo -e " \e[1mTodos:\e[0;32m"
 	if test -s ~/todo
