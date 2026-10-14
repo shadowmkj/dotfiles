@@ -212,7 +212,7 @@ run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-id = 'com.google.GeminiMacOS'
-run = 'move-node-to-workspace 4'
+run = 'move-node-to-workspace 9'
 
 [[on-window-detected]]
 if.app-id = 'NULL-APP-BUNDLE-ID'
