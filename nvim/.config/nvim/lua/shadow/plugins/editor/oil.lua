@@ -143,6 +143,35 @@ return {
 					"actions.preview",
 					opts = { split = "belowright" },
 				},
+				["go"] = {
+					desc = "Open file in desktop app",
+					callback = function()
+						local oil = require("oil")
+						local entry = oil.get_cursor_entry()
+						if not entry then
+							return
+						end
+						local dir = oil.get_current_dir()
+						if not dir then
+							return
+						end
+						local path = vim.fs.joinpath(dir, entry.name)
+
+						local cmd
+						if vim.fn.has("mac") == 1 then
+							cmd = { "open", path }
+						elseif vim.fn.has("unix") == 1 then
+							cmd = { "xdg-open", path }
+						elseif vim.fn.has("win32") == 1 then
+							cmd = { "cmd", "/c", "start", "", path }
+						else
+							vim.notify("System open not supported on this OS", vim.log.levels.WARN)
+							return
+						end
+
+						vim.system(cmd, { detach = true })
+					end,
+				},
 
 				-- Fuzzy Find in Current Oil Directory
 				["gd"] = {
@@ -152,7 +181,7 @@ return {
 						find_and_open_in_oil(oil.get_current_dir(), "Dirs> ")
 					end,
 				},
-				["<C-j>"] = {
+				["<C-f>"] = {
 					desc = "Jump to dir using Zoxide in Oil",
 					callback = function()
 						vim.ui.input({
@@ -173,7 +202,7 @@ return {
 				},
 
 				-- Jump via Zoxide then Fuzzy Find
-				["<C-f>"] = {
+				["gf"] = {
 					desc = "Fuzzy search directory via Zoxide in Oil",
 					callback = function()
 						vim.ui.input({

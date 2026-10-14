@@ -25,7 +25,7 @@ vim.keymap.set("n", "<leader>rr", function()
 end, { desc = "Enter smart directional window resize submode" })
 
 -- Open new file
-vim.keymap.set("n", "<leader>n", ':e <C-R>=expand("%:p:h") . "/" <cr>')
+vim.keymap.set("n", "<leader>N", ':e <C-R>=expand("%:p:h") . "/" <cr>')
 
 -- Copy/Paste from/to clipboard
 vim.keymap.set("x", "<leader>p", [["_dhp]])
@@ -63,7 +63,7 @@ vim.keymap.set("t", "<C-x>", "<C-\\><C-n>:bd!<CR>", { silent = true })
 vim.keymap.set("n", "<leader>bD", "<cmd>bd!<CR>")
 vim.keymap.set("n", "<leader>ls", "<cmd>bo 10sp | term leetrs submit %<CR>") -- submit to leetcode
 vim.keymap.set("n", "<leader>lt", "<cmd>bo 10sp | term leetrs test %<CR>") -- submit test to leetcode
-vim.keymap.set("n", "<leader>tt", "<cmd>:Themery<CR>")
+vim.keymap.set("n", "<leader>tt", "<cmd>:bo term<CR>")
 vim.keymap.set("n", "<leader>lr", "<cmd>:LiveRun<CR>")
 -- Exit Terminal mode easily
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
@@ -77,7 +77,7 @@ vim.keymap.set("t", "jk", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 -- end)
 
 -- wrap
-vim.keymap.set("n", "<leader>uw", function()
+vim.keymap.set("n", "<leader>nw", function()
 	vim.wo.wrap = not vim.wo.wrap
 end)
 
