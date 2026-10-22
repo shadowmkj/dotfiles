@@ -2,7 +2,7 @@
 # VERSION: 3.0
 SETUVAR --export EDITOR:nvim
 SETUVAR --export FZF_DEFAULT_OPTS:\x20\x2d\x2dcolor\x3dbg\x2b\x3a\x231c1c24\x2cbg\x3a\x23141415\x2cspinner\x3a\x23b4d4cf\x2chl\x3a\x237e98e8\x20\x2d\x2dcolor\x3dfg\x3a\x23878787\x2cheader\x3a\x237e98e8\x2cinfo\x3a\x23f3be7c\x2cpointer\x3a\x23b4d4cf\x20\x2d\x2dcolor\x3dmarker\x3a\x23b4d4cf\x2cfg\x2b\x3a\x23c3c3d5\x2cprompt\x3a\x23f3be7c\x2chl\x2b\x3a\x237e98e8
-SETUVAR --export MANPAGER:nvim\x20\x2bMan\x21\x20\x2dc\x20\x27set\x20ft\x3dman\x27
+SETUVAR --export MANPAGER:sh\x20\x2dc\x20\x27col\x20\x2dbx\x20\x7c\x20bat\x20\x2dl\x20man\x20\x2dp\x27
 SETUVAR --export VISUAL:nvim
 SETUVAR __fish_initialized:4300
 SETUVAR _fisher_jorgebucaran_2F_fisher_files:\x7e/\x2econfig/fish/functions/fisher\x2efish\x1e\x7e/\x2econfig/fish/completions/fisher\x2efish

@@ -56,9 +56,17 @@ vim.keymap.set("n", "<leader>ss", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left>
 -- Misc
 vim.keymap.set("n", "<leader>C", "<cmd>:Conf<CR>")
 vim.keymap.set("n", "<leader>bd", "<cmd>bd<CR>")
+vim.keymap.set("n", "gl", "<c-^>") -- Toggle last buffer
 
--- Press Ctrl+x while inside the terminal to close it instantly
-vim.keymap.set("t", "<C-x>", "<C-\\><C-n>:bd!<CR>", { silent = true })
+-- Press Ctrl+x while inside a normal terminal to close it instantly
+vim.api.nvim_create_autocmd("TermOpen", {
+	desc = "Close terminal buffer on <C-x>",
+	callback = function(event)
+		if vim.bo[event.buf].filetype ~= "fzf" then
+			vim.keymap.set("t", "<C-x>", "<C-\\><C-n>:bd!<CR>", { buffer = event.buf, silent = true })
+		end
+	end,
+})
 
 vim.keymap.set("n", "<leader>bD", "<cmd>bd!<CR>")
 vim.keymap.set("n", "<leader>ls", "<cmd>bo 10sp | term leetrs submit %<CR>") -- submit to leetcode
@@ -66,7 +74,6 @@ vim.keymap.set("n", "<leader>lt", "<cmd>bo 10sp | term leetrs test %<CR>") -- su
 vim.keymap.set("n", "<leader>tt", "<cmd>:bo term<CR>")
 vim.keymap.set("n", "<leader>lr", "<cmd>:LiveRun<CR>")
 -- Exit Terminal mode easily
-vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 vim.keymap.set("t", "jk", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- Toggle Github Copilot

@@ -9,7 +9,7 @@ return {
 		config.defaults.keymap.fzf["ctrl-q"] = "select-all+accept"
 		config.defaults.keymap.fzf["ctrl-u"] = "half-page-up"
 		config.defaults.keymap.fzf["ctrl-d"] = "half-page-down"
-		config.defaults.keymap.fzf["ctrl-x"] = "jump"
+		-- config.defaults.keymap.fzf["ctrl-x"] = "jump"
 		config.defaults.keymap.fzf["ctrl-f"] = "preview-page-down"
 		config.defaults.keymap.fzf["ctrl-b"] = "preview-page-up"
 		config.defaults.keymap.builtin["<c-f>"] = "preview-page-down"
@@ -76,6 +76,9 @@ return {
 				},
 				file_icons = false,
 				git_icons = true,
+				actions = {
+					["ctrl-x"] = { fn = actions.buf_del, reload = true },
+				},
 				-- no nth_devicons as we'll do that
 				-- manually since we also use
 				-- with-nth
@@ -167,16 +170,26 @@ return {
 		},
 		{
 			"<leader>,",
-			"<cmd>FzfLua buffers sort_mru=true sort_lastused=true<cr>",
+			function()
+				local fzf = require("fzf-lua")
+				fzf.buffers({
+					sort_mru = true,
+					sort_lastused = true,
+					actions = {
+						["ctrl-x"] = { fn = fzf.actions.buf_del, reload = true },
+					},
+				})
+			end,
 			desc = "Switch Buffer",
 		},
+
 		-- { "<leader>gp", "FzfLua live_grep<cr>", desc = "Grep (Root Dir)" },
 		{ "<leader>:", "<cmd>FzfLua command_history<cr>", desc = "Command History" },
 		{
 			"<leader><space>",
 			function()
 				local opts = {}
-				opts.cmd = "fd --color=never --hidden --type f --type l --exclude .git --exclude *.lock"
+				opts.cmd = "fd --color=never --hidden --type f --type l --exclude .git --exclude '*.lock'"
 				local base = vim.fn.fnamemodify(vim.fn.expand("%"), ":h:.:S")
 				if base ~= "." then
 					-- if there is no current file,

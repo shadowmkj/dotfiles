@@ -1,7 +1,9 @@
 local augroup = vim.api.nvim_create_augroup
-local ShadowGroup = augroup("ShadowGroup", {})
-local yank_group = augroup("HighlightYank", {})
 local autocmd = vim.api.nvim_create_autocmd
+
+-- =============================================================================
+-- Helpers & Filetype Detection
+-- =============================================================================
 
 -- Helper function to reload plenary modules during dev
 function R(name)
@@ -15,10 +17,23 @@ vim.filetype.add({
 	},
 })
 
--- Highlight on yank
+-- =============================================================================
+-- Autocommand Groups
+-- =============================================================================
+
+local editor_group = augroup("ShadowEditor", { clear = true })
+local filetypes_group = augroup("ShadowFileTypes", { clear = true })
+local terminal_group = augroup("ShadowTerminal", { clear = true })
+
+-- -----------------------------------------------------------------------------
+-- General Editor Behavior (ShadowEditor)
+-- -----------------------------------------------------------------------------
+
+-- Highlight briefly on yank
 autocmd("TextYankPost", {
-	group = yank_group,
+	group = editor_group,
 	pattern = "*",
+	desc = "Briefly highlight yanked text",
 	callback = function()
 		vim.highlight.on_yank({
 			higroup = "IncSearch",
@@ -28,16 +43,19 @@ autocmd("TextYankPost", {
 })
 
 -- Strip trailing whitespace on save
-autocmd({ "BufWritePre" }, {
-	group = ShadowGroup,
+autocmd("BufWritePre", {
+	group = editor_group,
 	pattern = "*",
+	desc = "Remove trailing whitespace on save",
 	command = [[%s/\s\+$//e]],
 })
 
--- Restore cursor position when opening a file
+-- Restore cursor position when opening a file (skip git commit messages)
 autocmd("BufReadPost", {
+	group = editor_group,
 	pattern = "*",
-	callback = function(_)
+	desc = "Restore last cursor position on file open",
+	callback = function()
 		if vim.fn.line("'\"") > 1 and vim.fn.line("'\"") <= vim.fn.line("$") then
 			if not vim.fn.expand("%:p"):find(".git", 1, true) then
 				vim.cmd('exe "normal! g\'\\""')
@@ -46,23 +64,25 @@ autocmd("BufReadPost", {
 	end,
 })
 
--- Jump to last edit position in buffer
-autocmd("BufReadPost", {
+-- Disable automatic comment continuation when pressing 'o' or Enter
+autocmd("FileType", {
+	group = editor_group,
 	pattern = "*",
+	desc = "Disable automatic comment continuation on Enter or 'o'",
 	callback = function()
-		if vim.fn.line("'\"") > 1 and vim.fn.line("'\"") <= vim.fn.line("$") then
-			-- except for in git commit messages
-			-- https://stackoverflow.com/questions/31449496/vim-ignore-specifc-file-in-autocommand
-			if not vim.fn.expand("%:p"):find(".git", 1, true) then
-				vim.cmd('exe "normal! g\'\\""')
-			end
-		end
+		vim.opt_local.formatoptions:remove({ "c", "r", "o" })
 	end,
 })
+
+-- -----------------------------------------------------------------------------
+-- Language / Filetype Specific (ShadowFileTypes)
+-- -----------------------------------------------------------------------------
 
 -- LaTeX text wrapping and colorcolumn
 autocmd("FileType", {
+	group = filetypes_group,
 	pattern = { "tex", "plaintex" },
+	desc = "Configure LaTeX textwidth and colorcolumn",
 	callback = function()
 		vim.opt_local.textwidth = 80
 		vim.opt_local.colorcolumn = "80"
@@ -72,27 +92,36 @@ autocmd("FileType", {
 
 -- Rust column rule
 autocmd("FileType", {
-	pattern = { "rust" },
-	command = "set colorcolumn=100",
-})
-
--- Disable automatic comment continuation when pressing 'o' or Enter
-autocmd("FileType", {
-	group = ShadowGroup,
-	pattern = "*",
+	group = filetypes_group,
+	pattern = "rust",
+	desc = "Set 100-character line guide for Rust",
 	callback = function()
-		vim.opt_local.formatoptions:remove({ "c", "r", "o" })
+		vim.opt_local.colorcolumn = "100"
 	end,
 })
 
+-- -----------------------------------------------------------------------------
+-- Terminal Behavior (ShadowTerminal)
+-- -----------------------------------------------------------------------------
+
+-- Automatically exit insert mode when a terminal process completes
 autocmd("TermClose", {
+	group = terminal_group,
+	pattern = "*",
+	desc = "Stop insert mode when terminal process exits",
 	callback = function()
 		vim.cmd("stopinsert")
 	end,
 })
 
--- Global tool defaults
+-- =============================================================================
+-- Global Defaults & Tool Settings
+-- =============================================================================
+
+-- FZF defaults
 vim.env.FZF_DEFAULT_COMMAND = "rg --hidden"
+
+-- Disable Copilot by default if loaded
 pcall(vim.cmd, "Copilot disable")
 
 -- Netrw settings

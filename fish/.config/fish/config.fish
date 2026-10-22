@@ -40,7 +40,10 @@ fzf --fish | source
 
 set -Ux EDITOR nvim
 set -Ux VISUAL nvim
-set -Ux MANPAGER "nvim +Man! -c 'set ft=man'"
+# set -Ux MANPAGER "nvim +Man! -c 'set ft=man'"
+# set -Ux MANPAGER "less -s -M +Gg"
+set -Ux MANPAGER "sh -c 'col -bx | bat -l man -p'"
+
 
 
 # Fish git prompt
@@ -368,7 +371,10 @@ end
 
 alias tosnake=ptosnake
 
-
+function fish_user_key_bindings
+    # Map 'jk' in insert mode to switch to default (normal) mode
+    bind -M insert -m default jk backward-char force-repaint
+end
 
 
 bind \cr _atuin_bind_up
