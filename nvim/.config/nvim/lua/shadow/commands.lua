@@ -54,3 +54,11 @@ vim.api.nvim_create_user_command("BdeleteRegex", close_matching_buffers, {
 	bang = true,
 	desc = "Close buffers matching a regex pattern",
 })
+
+local tatr = require("shadow.custom.tatr")
+
+vim.api.nvim_create_user_command("Tatr", tatr.get_tatr_huid, {
+	nargs = 0,
+	bang = false,
+	desc = "Close buffers matching a regex pattern",
+})

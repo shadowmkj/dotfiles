@@ -177,6 +177,7 @@ return {
 					sort_lastused = true,
 					actions = {
 						["ctrl-x"] = { fn = fzf.actions.buf_del, reload = true },
+						["ctrl-o"] = { fn = fzf.actions.buf_split },
 					},
 				})
 			end,

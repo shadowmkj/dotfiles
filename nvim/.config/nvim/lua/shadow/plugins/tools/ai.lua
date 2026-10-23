@@ -147,6 +147,7 @@ return {
 		opts = {
 			tmux = {
 				auto_enter = true,
+				target = "agy",
 			},
 			ui = {
 				panels = {

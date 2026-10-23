@@ -4,15 +4,6 @@ return {
 		version = "^1.0.0", -- use version <2.0.0 to avoid breaking changes
 		dependencies = { "3rd/image.nvim" },
 		build = ":UpdateRemotePlugins",
-		config = function()
-			-- Close output window easily with 'q'
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = "molten_output",
-				callback = function(event)
-					vim.keymap.set("n", "q", ":q<CR>", { buffer = event.buf, silent = true, desc = "Close output" })
-				end,
-			})
-		end,
 		init = function()
 			local python_host = vim.fn.expand("~/.virtualenvs/neovim/bin/python3")
 			if vim.fn.filereadable(python_host) == 1 then
@@ -78,15 +69,5 @@ return {
 				never_run = { "yaml" },
 			},
 		},
-		config = function(_, opts)
-			require("quarto").setup(opts)
-
-			local runner = require("quarto.runner")
-
-			vim.keymap.set("n", "<leader>mc", runner.run_cell, { desc = "Run cell" })
-			vim.keymap.set("n", "<leader>ma", runner.run_above, { desc = "Run cell and above" })
-			vim.keymap.set("n", "<leader>mb", runner.run_below, { desc = "Run cell and below" })
-			vim.keymap.set("n", "<leader>mA", runner.run_all, { desc = "Run all cells" })
-		end,
 	},
 }

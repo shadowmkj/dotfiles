@@ -180,22 +180,6 @@ vim.keymap.set("n", "<leader>A", "ggVG", { desc = "Select all" })
 vim.keymap.set("n", "<leader>R", ":restart<CR>", { desc = "Restart Neovim" })
 vim.keymap.set("v", "<Leader>n", ":norm ", { desc = "Run normal command on selection" })
 
--- Molten
-vim.keymap.set("n", "<leader>mm", "<cmd>:MoltenInit<CR>", { desc = "Toggle image display" })
-vim.keymap.set("n", "<localleader>E", ":MoltenEvaluateOperator<CR>", { silent = true, desc = "run operator selection" })
-vim.keymap.set("n", "<localleader>md", ":MoltenDelete<CR>", { silent = true, desc = "molten delete cell" })
-vim.keymap.set("n", "<localleader>ms", ":MoltenShowOutput<CR>", { silent = true, desc = "Show output window" })
-vim.keymap.set("n", "<leader>me", ":noautocmd MoltenEnterOutput<CR>", { silent = true, desc = "Focus output window" })
-vim.keymap.set("n", "<leader>mo", ":MoltenHideOutput<CR>", { silent = true, desc = "Hide output window" })
-vim.keymap.set("n", "<leader>mi", "<cmd>ImageToggle<CR>", { desc = "Toggle image display" })
-
-local toggle = require("shadow.custom.toggle_quatro") -- adjust path to where you saved the module
-
--- Toggle the output of the current cell
-vim.keymap.set("n", "<leader>mh", toggle.toggle_cell, { desc = "Toggle cell output" })
-
--- Toggle all outputs across the whole buffer
-vim.keymap.set("n", "<leader>mH", toggle.toggle_all, { desc = "Toggle all outputs" })
-
--- Toggle plot images via image.nvim
-vim.keymap.set("n", "<leader>mp", "<cmd>ImageToggle<CR>", { desc = "Toggle plot images" })
+-- Keybind: e.g. <leader>o (Terminal Open) or <leader>tb
+local t = require("shadow.custom.toggle_terminal")
+vim.keymap.set("n", "<leader>o", t.open_first_terminal_bottom, { desc = "Open first term buffer in bot split" })

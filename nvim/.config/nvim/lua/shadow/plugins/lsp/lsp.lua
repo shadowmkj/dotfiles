@@ -276,6 +276,12 @@ return {
 				lua = { "stylua" },
 				html = { "prettierd", "prettier", stop_after_first = true },
 				rust = { "rustfmt", lsp_format = "fallback" },
+				markdown = { "prettier" },
+			},
+			formatters = {
+				prettier = {
+					prepend_args = { "--print-width", "80", "--prose-wrap", "always" },
+				},
 			},
 			format_on_save = {
 				timeout_ms = 500,
