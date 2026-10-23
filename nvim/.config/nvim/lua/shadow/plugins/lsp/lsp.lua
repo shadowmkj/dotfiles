@@ -62,7 +62,11 @@ return {
 					vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, opts)
 					vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
 					vim.keymap.set("n", "<leader>=", function()
-						vim.lsp.buf.format({ async = false })
+						require("conform").format({
+							lsp_fallback = true,
+							async = false,
+							timeout_ms = 1000,
+						})
 					end, opts)
 					vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
 					vim.keymap.set("n", "]d", function()
@@ -274,14 +278,15 @@ return {
 		opts = {
 			formatters_by_ft = {
 				lua = { "stylua" },
-				html = { "prettierd", "prettier", stop_after_first = true },
 				rust = { "rustfmt", lsp_format = "fallback" },
-				markdown = { "prettier" },
-			},
-			formatters = {
-				prettier = {
-					prepend_args = { "--print-width", "80", "--prose-wrap", "always" },
-				},
+				toml = { "tombi" },
+				markdown = { "dprint" },
+				json = { "dprint" },
+				jsonc = { "dprint" },
+				javascript = { "dprint" },
+				typescript = { "dprint" },
+				javascriptreact = { "dprint" },
+				typescriptreact = { "dprint" },
 			},
 			format_on_save = {
 				timeout_ms = 500,

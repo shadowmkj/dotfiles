@@ -4,7 +4,6 @@ vim.g.maplocalleader = " "
 --
 vim.keymap.set("n", "k", "gk")
 vim.keymap.set("n", "j", "gj")
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 -- Quick Save
 vim.keymap.set("n", "<leader>w", "<cmd>w<cr>")
@@ -34,8 +33,6 @@ vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 vim.keymap.set("n", "<leader>Y", [["+Y]])
 
 vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
-
-vim.keymap.set("n", "Q", "<nop>")
 
 vim.keymap.set("n", "<leader>K", "<cmd>cnext<CR>zz")
 vim.keymap.set("n", "<leader>J", "<cmd>cprev<CR>zz")
@@ -183,3 +180,11 @@ vim.keymap.set("v", "<Leader>n", ":norm ", { desc = "Run normal command on selec
 -- Keybind: e.g. <leader>o (Terminal Open) or <leader>tb
 local t = require("shadow.custom.toggle_terminal")
 vim.keymap.set("n", "<leader>o", t.open_first_terminal_bottom, { desc = "Open first term buffer in bot split" })
+
+-- Multicursors
+local mc = require("shadow.custom.multicursor")
+vim.keymap.set("n", "<C-n>", mc.add_word_or_next, { desc = "Multicursor: Add word / next match" })
+vim.keymap.set("v", "<C-n>", mc.add_visual_or_next, { desc = "Multicursor: Add selection / next match" })
+vim.keymap.set("n", "<C-x>", mc.skip_next, { desc = "Multicursor: Skip current match" })
+vim.keymap.set("n", "<Esc>", mc.clear, { desc = "Clear multicursors and search highlight" })
+vim.keymap.set("n", "<C-->", mc.clear, { desc = "Clear multicursors and search highlight" })
