@@ -276,9 +276,21 @@ return {
 		"stevearc/conform.nvim",
 		event = { "BufWritePre" },
 		opts = {
+			formatters = {
+				dprint = {
+					command = vim.fn.expand("~/.dprint/bin/dprint"),
+				},
+			},
 			formatters_by_ft = {
 				lua = { "stylua" },
-				rust = { "rustfmt", lsp_format = "fallback" },
+				rust = {
+					"rustfmt",
+					lsp_format = "fallback",
+					format_on_save = {
+						timeout_ms = 500,
+						lsp_fallback = true,
+					},
+				},
 				toml = { "tombi" },
 				markdown = { "dprint" },
 				json = { "dprint" },
@@ -288,10 +300,10 @@ return {
 				javascriptreact = { "dprint" },
 				typescriptreact = { "dprint" },
 			},
-			format_on_save = {
-				timeout_ms = 500,
-				lsp_fallback = true,
-			},
+			-- format_on_save = {
+			-- 	timeout_ms = 500,
+			-- 	lsp_fallback = true,
+			-- },
 		},
 	},
 }

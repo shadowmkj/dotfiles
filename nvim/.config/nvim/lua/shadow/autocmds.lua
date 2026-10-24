@@ -35,7 +35,7 @@ autocmd("TextYankPost", {
 	pattern = "*",
 	desc = "Briefly highlight yanked text",
 	callback = function()
-		vim.highlight.on_yank({
+		vim.hl.hl_op({
 			higroup = "IncSearch",
 			timeout = 40,
 		})
@@ -171,6 +171,7 @@ vim.api.nvim_create_autocmd("FileType", {
 	group = filetypes_group,
 	pattern = "markdown",
 	callback = function(event)
+		vim.opt_local.colorcolumn = "100"
 		vim.keymap.set(
 			"n",
 			"<leader>m",

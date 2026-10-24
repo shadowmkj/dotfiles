@@ -58,7 +58,17 @@ vim.api.nvim_create_user_command("BdeleteRegex", close_matching_buffers, {
 local tatr = require("shadow.custom.tatr")
 
 vim.api.nvim_create_user_command("Tatr", tatr.get_tatr_huid, {
-	nargs = 0,
+	nargs = "?",
 	bang = false,
-	desc = "Close buffers matching a regex pattern",
+	desc = "Tatr task manager (e.g. :Tatr fzf or :Tatr <HUID>)",
+	complete = function(arg_lead)
+		local subcommands = { "fzf" }
+		local matches = {}
+		for _, sub in ipairs(subcommands) do
+			if sub:find("^" .. vim.pesc(arg_lead)) then
+				table.insert(matches, sub)
+			end
+		end
+		return matches
+	end,
 })

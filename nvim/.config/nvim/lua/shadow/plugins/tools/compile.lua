@@ -3,7 +3,7 @@ return {
 		"shadowmkj/compile-mode.nvim",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			{ "m00qek/baleia.nvim", tag = "v1.3.0" },
+			{ "m00qek/baleia.nvim", tag = "v1.4.0" },
 		},
 		config = function()
 			---@type CompileModeOpts

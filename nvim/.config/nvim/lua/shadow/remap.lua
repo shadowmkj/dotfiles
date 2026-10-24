@@ -185,6 +185,10 @@ vim.keymap.set("n", "<leader>o", t.open_first_terminal_bottom, { desc = "Open fi
 local mc = require("shadow.custom.multicursor")
 vim.keymap.set("n", "<C-n>", mc.add_word_or_next, { desc = "Multicursor: Add word / next match" })
 vim.keymap.set("v", "<C-n>", mc.add_visual_or_next, { desc = "Multicursor: Add selection / next match" })
-vim.keymap.set("n", "<C-x>", mc.skip_next, { desc = "Multicursor: Skip current match" })
+vim.keymap.set("n", "<C-s>", mc.skip_next, { desc = "Multicursor: Skip current match" })
 vim.keymap.set("n", "<Esc>", mc.clear, { desc = "Clear multicursors and search highlight" })
 vim.keymap.set("n", "<C-->", mc.clear, { desc = "Clear multicursors and search highlight" })
+
+-- Tatr Tasks (gf to open task under cursor or fallback to native gf)
+local tatr = require("shadow.custom.tatr")
+vim.keymap.set("n", "gf", tatr.open_or_gf, { desc = "Open Tatr task under cursor or file" })
