@@ -369,6 +369,18 @@ function ptosnake --description "pascal case to snake case"
     end
 end
 
+function mouse-follow --description "Toggle Mouse Follow Aerospace"
+	set file ~/.config/aerospace/aerospace.toml
+	set on (cat $file | rg "mouse.enabled = true" | wc -l | sed 's/ //g')
+	if test $on -gt 0
+		sed -i '' 's/mouse.enabled = true/mouse.enabled = false/g' $file
+		aerospace reload-config
+	else
+		sed -i '' 's/mouse.enabled = false/mouse.enabled = true/g' $file
+		aerospace reload-config
+	end
+end
+
 alias tosnake=ptosnake
 
 function fish_user_key_bindings

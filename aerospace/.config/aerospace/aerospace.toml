@@ -1,12 +1,12 @@
 config-version = 2
 
 after-startup-command = [
-  'exec-and-forget borders active_color=0xfff3be7c inactive_color=0xff313244 width=8.0',
+  'exec-and-forget borders active_color=0xffebdbb2 inactive_color=0xff313244 width=4.0',
 ]
 # Start AeroSpace at login
 start-at-login = false
 
-# focus-follows-mouse.enabled = true
+focus-follows-mouse.enabled = false
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
 # enable-normalization-flatten-containers = true
